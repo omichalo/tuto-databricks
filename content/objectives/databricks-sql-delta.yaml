@@ -1,0 +1,80 @@
+# Référentiel d'objectifs du parcours « Databricks SQL et Delta Lake : premiers pas ».
+# Chaque objectif est mesurable (verbe de Bloom) et rattaché à au moins une source officielle.
+domain: databricks-sql-delta
+objectives:
+  - id: sql-delta.lakehouse
+    bloom: understand
+    fr: Expliquer ce qu'apporte une architecture lakehouse par rapport à un data lake et à un entrepôt de données séparés.
+    sources:
+      - title: What is a data lakehouse?
+        url: https://docs.databricks.com/aws/en/lakehouse/
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.delta-format
+    bloom: understand
+    fr: Décrire le rôle du journal de transactions Delta (_delta_log) et les garanties ACID qu'il apporte.
+    sources:
+      - title: What is Delta Lake in Databricks?
+        url: https://docs.databricks.com/aws/en/delta/
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.namespace
+    bloom: apply
+    fr: Désigner une table par son nom complet à trois niveaux (catalogue.schéma.table) dans Unity Catalog.
+    sources:
+      - title: What is Unity Catalog?
+        url: https://docs.databricks.com/aws/en/data-governance/unity-catalog/
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.managed-tables
+    bloom: understand
+    fr: Distinguer une table gérée d'une table externe et prévoir ce que devient la donnée lors d'un DROP TABLE.
+    sources:
+      - title: Unity Catalog managed tables
+        url: https://docs.databricks.com/aws/en/tables/managed
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.aggregate
+    bloom: apply
+    fr: Écrire une requête d'agrégation avec GROUP BY, des fonctions d'agrégat et un filtre HAVING.
+    sources:
+      - title: GROUP BY clause
+        url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby
+        verifiedAt: '2026-10-17'
+      - title: HAVING clause
+        url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-having
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.where-vs-having
+    bloom: analyze
+    fr: Choisir entre WHERE et HAVING selon que le filtre porte sur les lignes ou sur les groupes.
+    sources:
+      - title: HAVING clause
+        url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-having
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.ctas
+    bloom: apply
+    fr: Créer ou remplacer une table Delta à partir d'une requête avec CREATE OR REPLACE TABLE ... AS SELECT.
+    sources:
+      - title: CREATE TABLE [USING]
+        url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-table-using
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.dml
+    bloom: apply
+    fr: Modifier des lignes d'une table Delta avec UPDATE et en mesurer l'effet.
+    sources:
+      - title: UPDATE
+        url: https://docs.databricks.com/aws/en/sql/language-manual/delta-update
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.history
+    bloom: apply
+    fr: Lire l'historique d'une table Delta avec DESCRIBE HISTORY et interpréter version, opération et métriques.
+    sources:
+      - title: DESCRIBE HISTORY
+        url: https://docs.databricks.com/aws/en/sql/language-manual/delta-describe-history
+        verifiedAt: '2026-10-17'
+  - id: sql-delta.time-travel
+    bloom: apply
+    fr: Interroger une version antérieure d'une table avec VERSION AS OF ou TIMESTAMP AS OF et en connaître les limites (rétention, VACUUM).
+    sources:
+      - title: Work with table history
+        url: https://docs.databricks.com/aws/en/delta/history
+        verifiedAt: '2026-10-17'
+      - title: VACUUM
+        url: https://docs.databricks.com/aws/en/sql/language-manual/delta-vacuum
+        verifiedAt: '2026-10-17'

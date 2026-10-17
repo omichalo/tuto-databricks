@@ -1,0 +1,6 @@
+{
+  "labId": "delta-first-table",
+  "labVersion": "1.0.0",
+  "checkCode": "DFT-43854",
+  "canary": "CANARY-LAB-VERIFICATION-delta-first-table"
+}

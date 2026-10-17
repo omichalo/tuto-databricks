@@ -1,0 +1,90 @@
+lessonId: lakehouse-et-delta
+questions:
+  - id: q1-lakehouse
+    objectiveId: sql-delta.lakehouse
+    kind: single
+    prompt: Quel est l'apport principal d'une architecture lakehouse par rapport à un data lake et un entrepôt séparés ?
+    sectionAnchor: le-lakehouse-un-seul-stockage-des-garanties-dentrepot
+    choices:
+      - id: a
+        text: Ajouter des garanties transactionnelles et de gouvernance directement sur le stockage objet ouvert, sans copie vers un second système.
+        correct: true
+        explanation: C'est la définition du lakehouse — les données restent dans un seul stockage ouvert, auquel Delta et Unity Catalog ajoutent transactions, schéma et gouvernance.
+      - id: b
+        text: Remplacer le stockage objet par une base de données relationnelle propriétaire plus rapide.
+        correct: false
+        explanation: Au contraire, le lakehouse conserve le stockage objet et des formats ouverts (Parquet et le journal Delta).
+      - id: c
+        text: Copier automatiquement chaque nuit le data lake vers l'entrepôt de données.
+        correct: false
+        explanation: Cette copie est précisément le défaut de l'architecture à deux étages que le lakehouse cherche à supprimer.
+      - id: d
+        text: Interdire les données non structurées pour garantir la qualité.
+        correct: false
+        explanation: Le lakehouse accepte des données structurées et non structurées ; la qualité vient du schéma et des transactions, pas d'une interdiction.
+  - id: q2-atomicite
+    objectiveId: sql-delta.delta-format
+    kind: single
+    prompt: Une écriture dans une table Delta est interrompue après l'écriture de nouveaux fichiers Parquet, mais avant l'ajout du commit dans _delta_log. Que voit un lecteur ?
+    sectionAnchor: comment-delta-rend-le-stockage-objet-transactionnel
+    choices:
+      - id: a
+        text: La version précédente de la table, sans aucune ligne de l'écriture interrompue.
+        correct: true
+        explanation: Les fichiers ne font partie de la table que lorsqu'un commit du journal les déclare. Sans commit, ils sont invisibles — c'est l'atomicité.
+      - id: b
+        text: Une partie des nouvelles lignes, selon les fichiers déjà écrits.
+        correct: false
+        explanation: C'est ce qui arriverait avec de simples fichiers dans un data lake, pas avec Delta, qui ne lit que les fichiers référencés par le journal.
+      - id: c
+        text: Une erreur, car la table est verrouillée jusqu'à la fin de l'écriture.
+        correct: false
+        explanation: Delta n'utilise pas de verrou bloquant les lecteurs ; ceux-ci lisent la dernière version validée.
+      - id: d
+        text: Toutes les nouvelles lignes, car les fichiers Parquet sont déjà présents dans le stockage.
+        correct: false
+        explanation: La présence physique des fichiers ne suffit pas ; seul le journal définit le contenu de la table.
+  - id: q3-namespace
+    objectiveId: sql-delta.namespace
+    kind: single
+    prompt: Quelle requête désigne sans ambiguïté la table orders du schéma ventes dans le catalogue formation ?
+    sectionAnchor: organiser-les-donnees-le-nom-a-trois-niveaux
+    choices:
+      - id: a
+        text: SELECT * FROM formation.ventes.orders
+        correct: true
+        explanation: Unity Catalog utilise le nom à trois niveaux catalogue.schéma.table.
+      - id: b
+        text: SELECT * FROM ventes.formation.orders
+        correct: false
+        explanation: L'ordre est inversé — le catalogue vient en premier, puis le schéma.
+      - id: c
+        text: SELECT * FROM formation/ventes/orders
+        correct: false
+        explanation: Les objets Unity Catalog ne se désignent pas par un chemin de fichiers.
+      - id: d
+        text: SELECT * FROM orders@formation.ventes
+        correct: false
+        explanation: Cette syntaxe n'existe pas en SQL Databricks.
+  - id: q4-managed
+    objectiveId: sql-delta.managed-tables
+    kind: single
+    prompt: Vous exécutez DROP TABLE sur une table créée avec CREATE TABLE ... AS SELECT, sans clause LOCATION. Que deviennent ses données ?
+    sectionAnchor: tables-gerees-et-tables-externes
+    choices:
+      - id: a
+        text: La table est une table gérée — ses fichiers de données sont supprimés par Databricks après le DROP.
+        correct: true
+        explanation: Sans LOCATION, Unity Catalog crée une table gérée dont il gère le stockage ; le DROP entraîne la suppression de ses données.
+      - id: b
+        text: Les fichiers restent dans le stockage et peuvent être rattachés à une nouvelle table.
+        correct: false
+        explanation: C'est le comportement d'une table externe, créée avec LOCATION.
+      - id: c
+        text: La table est seulement masquée et réapparaît au prochain redémarrage du calcul.
+        correct: false
+        explanation: Un DROP TABLE supprime la définition dans le catalogue ; il ne dépend pas du calcul.
+      - id: d
+        text: Le DROP est refusé tant que la table contient des données.
+        correct: false
+        explanation: DROP TABLE n'exige pas qu'une table soit vide (c'est DROP SCHEMA sans CASCADE qui exige un schéma vide).

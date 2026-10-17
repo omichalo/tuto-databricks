@@ -1,0 +1,117 @@
+---
+id: ecrire-dans-delta
+title: Écrire dans une table Delta
+summary: Créer une table par CTAS, y ajouter des lignes, les modifier avec UPDATE ou DELETE, et comprendre ce que chaque écriture produit dans le journal Delta.
+status: in-technical-review
+durationMinutes: 35
+objectiveIds: [sql-delta.ctas, sql-delta.dml, sql-delta.delta-format, sql-delta.managed-tables]
+sources:
+  - title: CREATE TABLE [USING]
+    url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-table-using
+    verifiedAt: '2026-10-17'
+  - title: UPDATE
+    url: https://docs.databricks.com/aws/en/sql/language-manual/delta-update
+    verifiedAt: '2026-10-17'
+  - title: What is Delta Lake in Databricks?
+    url: https://docs.databricks.com/aws/en/delta/
+    verifiedAt: '2026-10-17'
+translations:
+  fr: complete
+  en: missing
+labId: delta-first-table
+---
+
+## Créer une table à partir d'une requête (CTAS)
+
+La façon la plus directe de créer une table est de la définir par une requête : c'est le **CTAS**, pour *CREATE TABLE AS SELECT*.
+
+```sql
+CREATE OR REPLACE TABLE orders_by_country AS
+SELECT country,
+       COUNT(*)          AS delivered_orders,
+       SUM(amount_cents) AS delivered_revenue_cents
+FROM orders
+WHERE status = 'delivered'
+GROUP BY country;
+```
+
+- Le **schéma** de la nouvelle table (noms et types des colonnes) est déduit de la requête.
+- Sans clause `USING`, la table est au format **Delta**, le format par défaut sur Databricks.
+- Sans clause `LOCATION`, c'est une **table gérée** par Unity Catalog.
+
+Trois variantes à distinguer :
+
+- `CREATE TABLE t AS ...` échoue si `t` existe déjà ;
+- `CREATE TABLE IF NOT EXISTS t AS ...` ne fait rien si `t` existe déjà ;
+- `CREATE OR REPLACE TABLE t AS ...` remplace le contenu et le schéma de `t` **dans une nouvelle version** de la même table. L'historique est conservé, contrairement à un `DROP TABLE` suivi d'un `CREATE TABLE`.
+
+<Callout kind="tip" title="Pourquoi préférer CREATE OR REPLACE à DROP puis CREATE ?">
+Le remplacement est une seule transaction : un lecteur voit soit l'ancienne version, soit la nouvelle, jamais une table absente. Et vous pouvez encore consulter la version précédente.
+</Callout>
+
+## Ajouter des lignes
+
+`INSERT INTO` ajoute des lignes à une table existante, à partir de valeurs ou d'une requête :
+
+```sql
+INSERT INTO orders_by_country VALUES ('BE', 0, 0);
+
+INSERT INTO orders_by_country
+SELECT country, COUNT(*), SUM(amount_cents)
+FROM new_orders
+GROUP BY country;
+```
+
+`INSERT OVERWRITE` remplace le contenu de la table par le résultat de la requête, en conservant la définition de la table.
+
+### L'application du schéma
+
+Delta vérifie que les données écrites correspondent au schéma de la table : une colonne inconnue ou un type incompatible fait échouer l'écriture au lieu de corrompre silencieusement la table. Faire évoluer le schéma (ajouter une colonne, par exemple) est une opération explicite, que vous découvrirez dans un module ultérieur.
+
+## Modifier et supprimer : UPDATE et DELETE
+
+Contrairement à de simples fichiers Parquet, une table Delta accepte les modifications ligne à ligne :
+
+```sql
+UPDATE orders
+SET status = 'cancelled'
+WHERE status = 'pending' AND order_date < DATE '2026-03-01';
+
+DELETE FROM orders
+WHERE status = 'returned' AND order_date < DATE '2026-01-15';
+```
+
+<Callout kind="warning" title="Toujours une clause WHERE">
+Un `UPDATE` ou un `DELETE` sans `WHERE` s'applique à **toutes** les lignes. Avant d'exécuter une modification, lancez un `SELECT COUNT(*)` avec la même clause `WHERE` pour savoir combien de lignes seront touchées.
+</Callout>
+
+`MERGE INTO` combine insertion, mise à jour et suppression en une seule opération à partir d'une table source : c'est l'outil de base pour appliquer des changements ou dédoublonner. Il fera l'objet d'une leçon dédiée.
+
+## Ce que produit une écriture dans le journal
+
+Les fichiers Parquet sont **immuables** : Delta ne les modifie jamais sur place. Lors d'un `UPDATE`, Delta :
+
+1. repère les fichiers qui contiennent au moins une ligne concernée ;
+2. écrit les lignes modifiées dans de **nouveaux** fichiers (ou, si la fonctionnalité *deletion vectors* est activée, marque les lignes supprimées sans réécrire tout le fichier) ;
+3. ajoute un commit qui retire les anciens fichiers de la table et ajoute les nouveaux.
+
+Les anciens fichiers ne sont pas effacés immédiatement : ils restent dans le stockage, simplement retirés de la version courante. C'est ce qui rend possibles l'historique et le time travel, étudiés dans la leçon suivante.
+
+Chaque commit enregistre aussi des **métriques** : nombre de lignes modifiées, de fichiers ajoutés et retirés, etc. Vous les lirez avec `DESCRIBE HISTORY`.
+
+## Pratiquer sur Databricks Free Edition
+
+Le TP « Votre première table Delta » vous fait réaliser ces opérations sur une vraie table gérée par Unity Catalog, dans votre propre workspace Free Edition :
+
+- génération de 10 000 commandes par `CREATE OR REPLACE TABLE ... AS SELECT` ;
+- création de `orders_by_country` par CTAS ;
+- `UPDATE` des commandes anciennes, avec le nombre de lignes modifiées à vérifier.
+
+Si vous n'avez pas de compte, la partie agrégation se pratique aussi dans le navigateur.
+
+## À retenir
+
+- `CREATE OR REPLACE TABLE ... AS SELECT` crée ou remplace une table Delta gérée dans une nouvelle version, en conservant l'historique.
+- Delta applique le schéma de la table à chaque écriture.
+- `UPDATE` et `DELETE` réécrivent des fichiers et ajoutent un commit ; les anciens fichiers restent disponibles un temps.
+- Testez toujours la clause `WHERE` d'une modification avec un `SELECT COUNT(*)`.

@@ -1,0 +1,120 @@
+---
+id: requetes-agregations
+title: Interroger et agréger avec SQL
+summary: Lire une table, filtrer les lignes, regrouper avec GROUP BY et filtrer les groupes avec HAVING, en comprenant l'ordre logique d'évaluation d'une requête.
+status: in-technical-review
+durationMinutes: 30
+objectiveIds: [sql-delta.aggregate, sql-delta.where-vs-having, sql-delta.namespace]
+sources:
+  - title: GROUP BY clause
+    url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby
+    verifiedAt: '2026-10-17'
+  - title: HAVING clause
+    url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-having
+    verifiedAt: '2026-10-17'
+translations:
+  fr: complete
+  en: missing
+exerciseId: revenus-par-pays
+verifiedOn:
+  platform: duckdb
+  date: '2026-10-17'
+---
+
+## Le jeu de données du module
+
+Tout le module utilise une table `orders` de commandes **synthétiques**, produite par un générateur déterministe : les mêmes lignes sont créées dans votre navigateur et dans votre workspace Databricks. Ses colonnes :
+
+| Colonne | Type | Contenu |
+| --- | --- | --- |
+| `order_id` | BIGINT | identifiant de commande |
+| `customer_id` | INT | identifiant de client (1 à 500) |
+| `status` | STRING | `delivered`, `pending`, `cancelled` ou `returned` |
+| `country` | STRING | `FR`, `DE`, `ES` ou `IT` |
+| `amount_cents` | INT | montant en centimes |
+| `order_date` | DATE | date de commande, en 2026 |
+
+<Callout kind="info" title="Pourquoi des centimes ?">
+Stocker un montant en centimes entiers évite les erreurs d'arrondi des nombres à virgule flottante. On ne convertit en euros qu'au moment de l'affichage.
+</Callout>
+
+## Lire et filtrer des lignes
+
+Une requête de lecture choisit des colonnes (`SELECT`), une source (`FROM`) et, éventuellement, un filtre sur les lignes (`WHERE`) :
+
+```sql
+SELECT order_id, country, amount_cents
+FROM orders
+WHERE status = 'delivered' AND amount_cents >= 9000
+ORDER BY amount_cents DESC
+LIMIT 5;
+```
+
+`WHERE` s'applique **à chaque ligne**, avant tout regroupement. `ORDER BY` trie le résultat et `LIMIT` en garde les premières lignes. Sans `ORDER BY`, l'ordre des lignes n'est jamais garanti, même s'il semble stable d'une exécution à l'autre.
+
+## Regrouper avec GROUP BY
+
+`GROUP BY` rassemble les lignes qui partagent la même valeur pour une ou plusieurs colonnes, puis calcule un **agrégat** par groupe :
+
+```sql
+SELECT status,
+       COUNT(*)          AS orders,
+       SUM(amount_cents) AS revenue_cents,
+       AVG(amount_cents) AS avg_cents
+FROM orders
+GROUP BY status;
+```
+
+Les agrégats les plus courants sont `COUNT(*)` (nombre de lignes), `COUNT(col)` (nombre de valeurs non nulles), `COUNT(DISTINCT col)`, `SUM`, `AVG`, `MIN` et `MAX`.
+
+<Callout kind="warning" title="La règle d'or du GROUP BY">
+Chaque colonne du `SELECT` doit soit figurer dans le `GROUP BY`, soit être à l'intérieur d'une fonction d'agrégat. Sélectionner `customer_id` dans la requête ci-dessus provoque une erreur : à quel client correspondrait la ligne du groupe `delivered` ?
+</Callout>
+
+On peut regrouper sur plusieurs colonnes : `GROUP BY country, status` produit une ligne par couple (pays, statut).
+
+## Filtrer les groupes avec HAVING
+
+Pour ne garder que certains **groupes**, on utilise `HAVING`, qui s'évalue après le calcul des agrégats :
+
+```sql
+SELECT country, SUM(amount_cents) AS delivered_revenue_cents
+FROM orders
+WHERE status = 'delivered'
+GROUP BY country
+HAVING SUM(amount_cents) > 1460000;
+```
+
+Cette requête combine les deux filtres :
+
+- `WHERE status = 'delivered'` écarte des **lignes** avant le regroupement ;
+- `HAVING SUM(amount_cents) > 1460000` écarte des **groupes** après le calcul.
+
+Placer le filtre sur le statut dans `HAVING` ne fonctionnerait pas : après le regroupement par pays, il n'existe plus de colonne `status` par groupe. À l'inverse, `WHERE SUM(amount_cents) > 1460000` est refusé, car l'agrégat n'existe pas encore au moment où `WHERE` s'applique.
+
+## L'ordre logique d'évaluation
+
+Une requête s'écrit `SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY`, mais elle s'évalue logiquement dans un autre ordre :
+
+1. `FROM` : la source des lignes ;
+2. `WHERE` : le filtre sur les lignes ;
+3. `GROUP BY` : la formation des groupes ;
+4. calcul des agrégats ;
+5. `HAVING` : le filtre sur les groupes ;
+6. `SELECT` : le calcul des colonnes du résultat et de leurs alias ;
+7. `ORDER BY` puis `LIMIT`.
+
+Cet ordre explique la plupart des erreurs de débutant. Par exemple, un alias défini dans `SELECT` est toujours utilisable dans `ORDER BY`, mais son usage dans `WHERE` ou `HAVING` dépend du moteur. Pour écrire une requête portable, répétez l'expression d'agrégat dans `HAVING`.
+
+## Navigateur et Databricks : deux moteurs, un même SQL
+
+L'exercice ci-dessous s'exécute dans votre navigateur avec **DuckDB**, un moteur SQL embarqué. Ce n'est pas Databricks : DuckDB et Databricks SQL ont chacun leurs extensions et leurs fonctions propres. L'exercice se limite donc au SQL standard qu'acceptent les deux moteurs, et la même requête fonctionne telle quelle sur la table du TP Free Edition.
+
+La vérification compare l'**empreinte** de votre résultat (valeurs et ordre des lignes) à celle de la solution. Les noms de colonnes n'interviennent pas, seulement leur position. Elle est **formative** : elle vous aide à progresser, mais elle ne constitue pas une certification.
+
+## À retenir
+
+- `WHERE` filtre les lignes, `HAVING` filtre les groupes.
+- Toute colonne du `SELECT` d'une requête agrégée doit être regroupée ou agrégée.
+- L'ordre d'évaluation (FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY) explique les erreurs les plus fréquentes.
+- Sans `ORDER BY`, l'ordre du résultat n'est pas garanti.

@@ -1,0 +1,102 @@
+# Manifeste du TP "Votre première table Delta". Schéma : src/domain/labs/manifest-schema.ts
+id: delta-first-table
+version: 1.0.0
+title: Votre première table Delta, de la création au time travel
+summary: >-
+  Générer une table Delta gérée par Unity Catalog, l'interroger avec des agrégations, en dériver une
+  table par CTAS, la modifier avec UPDATE, puis lire son historique et une version antérieure.
+trackId: databricks-sql-delta
+moduleId: m01-premiers-pas
+lessonIds: [lakehouse-et-delta, ecrire-dans-delta, historique-time-travel]
+objectiveIds:
+  - sql-delta.namespace
+  - sql-delta.managed-tables
+  - sql-delta.ctas
+  - sql-delta.dml
+  - sql-delta.history
+  - sql-delta.time-travel
+durationMinutes: 40
+
+environments:
+  browser:
+    supported: partial
+    exerciseId: revenus-par-pays
+    notes: >-
+      Le navigateur reproduit l'étape d'agrégation avec DuckDB-Wasm. Le journal Delta, DESCRIBE HISTORY
+      et le time travel n'existent que sur Databricks.
+  databricks-free-manual:
+    supported: 'yes'
+    status: experimental
+    requiredFeatures:
+      - serverless-notebook
+      - notebook-import-ipynb
+      - widgets
+      - unity-catalog-managed-table
+      - delta-update
+      - delta-describe-history
+      - delta-time-travel-version
+      - default-schema-in-workspace-catalog
+    unavailableFeatures: []
+    serverlessConstraints:
+      - python-and-sql-only
+      - no-rdd-or-spark-context
+      - no-dataframe-cache
+      - no-dbfs-paths
+      - no-outbound-data-download
+    notes: >-
+      Les données sont générées dans le notebook (pas de téléchargement). Si la création de schéma est
+      refusée, le notebook se replie sur le schéma `default` avec des tables préfixées.
+    validation: null
+  professional-workspace:
+    supported: 'yes'
+    status: experimental
+    requiredFeatures:
+      - unity-catalog-managed-table
+      - delta-update
+      - delta-describe-history
+      - delta-time-travel-version
+    unavailableFeatures: []
+    serverlessConstraints: []
+    notes: Nécessite le droit CREATE SCHEMA dans le catalogue choisi, ou l'accès au schéma `default`.
+    validation: null
+
+prerequisites:
+  - Un compte Databricks Free Edition personnel (ou un workspace professionnel autorisé)
+  - La leçon « Écrire dans une table Delta »
+
+setup:
+  catalog: widget `catalog`, catalogue courant (current_catalog()) si vide
+  schema: orion_lab_delta_first_table
+  fallbackTablePrefix: orion_dft_
+
+resources:
+  compute: serverless-notebook
+  estimatedDbuNote: Quelques minutes de calcul serverless ; 10 000 lignes, moins de 1 Mo.
+
+data:
+  mode: in-notebook-generator
+  generator: data/generator.sql
+  rows: 10000
+  approxSizeMb: 0.5
+  expectedStats: data/expected-stats.json
+  containsPersonalData: false
+
+artifacts:
+  exercise: notebooks/exercise.py
+  solution: notebooks/solution.py
+  cleanup: notebooks/cleanup.py
+
+cleanup:
+  objectsCreated:
+    - table:orders
+    - table:orders_by_country
+    - schema:orion_lab_delta_first_table
+  verification: >-
+    La dernière cellule du notebook de nettoyage liste les objets du lab encore présents et doit
+    afficher 0.
+
+verification:
+  checkCell: Vérification automatique du TP
+  checkCodePrefix: DFT
+
+termsNotice: free-edition-v1

@@ -1,0 +1,73 @@
+{
+  "name": "tuto-databricks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plateforme de formation interactive à Databricks (nom de produit provisoire, voir src/config/product.ts).",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "content:build": "tsx scripts/build-content.ts",
+    "duckdb:vendor": "tsx scripts/vendor-duckdb.ts",
+    "predev": "npm run content:build && npm run duckdb:vendor",
+    "dev": "next dev",
+    "prebuild": "npm run content:build && npm run duckdb:vendor",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "npm run content:build && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --project unit",
+    "test:coverage": "vitest run --project unit --coverage",
+    "test:emulators": "vitest run --project emulators",
+    "test:emulators:run": "firebase emulators:exec --project demo-tuto-databricks --only auth,firestore \"npm run test:emulators\"",
+    "test:e2e": "playwright test",
+    "labs:check": "tsx scripts/labs/check-all.ts",
+    "labs:build-notebooks": "tsx scripts/labs/build-notebooks.ts",
+    "content:check": "tsx scripts/content-report.ts --strict",
+    "security:baseline": "tsx scripts/check-security-baseline.ts",
+    "security:bundle": "tsx --conditions=react-server scripts/check-client-bundle.ts",
+    "emulators": "firebase emulators:start --project demo-tuto-databricks --only auth,firestore",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run labs:check && npm run content:check && npm run security:baseline"
+  },
+  "overrides": {
+    "sharp": "0.35.5",
+    "postcss": "8.5.30",
+    "@grpc/grpc-js": "1.14.6"
+  },
+  "dependencies": {
+    "@duckdb/duckdb-wasm": "1.32.0",
+    "firebase": "13.0.0",
+    "firebase-admin": "14.5.0",
+    "next": "15.5.28",
+    "next-mdx-remote": "6.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remark-gfm": "4.0.1",
+    "server-only": "0.0.1",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@duckdb/node-api": "1.5.6-r.1",
+    "@eslint/eslintrc": "3.3.7",
+    "@firebase/rules-unit-testing": "6.0.0",
+    "@playwright/test": "1.64.1",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitest/coverage-v8": "5.0.5",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.28",
+    "jsdom": "30.1.3",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.2",
+    "vitest": "5.0.5"
+  }
+}

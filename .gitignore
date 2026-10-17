@@ -1,0 +1,39 @@
+# dépendances et outils locaux
+node_modules/
+.tools/
+
+# build
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# fichiers générés (scripts/build-content.ts, scripts/vendor-duckdb.ts)
+src/generated/
+public/vendor/
+public/labs/
+
+# tests
+coverage/
+playwright-report/
+test-results/
+
+# Firebase
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+emulator-data/
+
+# secrets et environnements locaux
+.env
+.env.*
+!.env.example
+*.pem
+service-account*.json
+
+# divers
+.DS_Store
+npm-debug.log*
+
+content-report.json

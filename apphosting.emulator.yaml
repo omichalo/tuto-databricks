@@ -1,0 +1,14 @@
+# Utilisé par l'émulateur App Hosting (firebase emulators:start). Projet de démonstration uniquement.
+env:
+  - variable: APP_ENV
+    value: local
+  - variable: APP_ORIGIN
+    value: http://localhost:5002
+  - variable: CONTENT_MIN_STATUS
+    value: draft
+  - variable: LAB_MIN_STATUS
+    value: draft
+  - variable: APP_CHECK_ENFORCED
+    value: 'false'
+  - variable: SQL_SERVER_GRADING_ENABLED
+    value: 'false'

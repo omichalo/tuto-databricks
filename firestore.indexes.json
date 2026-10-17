@@ -1,0 +1,36 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "trackProgress",
+      "fieldPath": "moduleSummary",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "lessonProgress",
+      "fieldPath": "checks",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "lessonProgress",
+      "fieldPath": "quizAnswers",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "users",
+      "fieldPath": "preferences",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "users",
+      "fieldPath": "acknowledgements",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "rateLimits",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    }
+  ]
+}

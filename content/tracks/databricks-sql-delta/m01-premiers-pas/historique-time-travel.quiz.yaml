@@ -1,0 +1,90 @@
+lessonId: historique-time-travel
+questions:
+  - id: q1-history-order
+    objectiveId: sql-delta.history
+    kind: single
+    prompt: Dans quel ordre DESCRIBE HISTORY présente-t-il les versions d'une table ?
+    sectionAnchor: lire-lhistorique-dune-table
+    choices:
+      - id: a
+        text: De la plus récente à la plus ancienne.
+        correct: true
+        explanation: La première ligne est la dernière opération ; DESCRIBE HISTORY t LIMIT 1 renvoie donc la plus récente.
+      - id: b
+        text: De la plus ancienne à la plus récente.
+        correct: false
+        explanation: C'est l'ordre inverse de celui de DESCRIBE HISTORY.
+      - id: c
+        text: Par type d'opération.
+        correct: false
+        explanation: Les versions ne sont pas regroupées par opération.
+      - id: d
+        text: Dans un ordre non garanti.
+        correct: false
+        explanation: L'ordre est défini (de la plus récente à la plus ancienne).
+  - id: q2-version-before
+    objectiveId: sql-delta.time-travel
+    kind: single
+    prompt: L'historique montre un UPDATE en version 4. Quelle requête compte les commandes pending juste avant cet UPDATE ?
+    sectionAnchor: interroger-une-version-passee-le-time-travel
+    choices:
+      - id: a
+        text: SELECT COUNT(*) FROM orders VERSION AS OF 3 WHERE status = 'pending'
+        correct: true
+        explanation: La version 3 est le dernier état avant le commit de l'UPDATE (version 4).
+      - id: b
+        text: SELECT COUNT(*) FROM orders VERSION AS OF 4 WHERE status = 'pending'
+        correct: false
+        explanation: La version 4 contient déjà le résultat de l'UPDATE.
+      - id: c
+        text: SELECT COUNT(*) FROM orders WHERE status = 'pending' AND version = 3
+        correct: false
+        explanation: version n'est pas une colonne de la table ; le time travel s'exprime avec VERSION AS OF.
+      - id: d
+        text: RESTORE TABLE orders TO VERSION AS OF 3
+        correct: false
+        explanation: RESTORE modifie la table (il ajoute une version) ; pour seulement lire, on utilise VERSION AS OF dans un SELECT.
+  - id: q3-restore
+    objectiveId: sql-delta.time-travel
+    kind: single
+    prompt: Que fait RESTORE TABLE orders TO VERSION AS OF 3 sur l'historique de la table ?
+    sectionAnchor: revenir-en-arriere-restore
+    choices:
+      - id: a
+        text: Il ajoute une nouvelle version dont le contenu est celui de la version 3 ; l'historique est conservé.
+        correct: true
+        explanation: RESTORE est une écriture comme une autre — elle crée une version et laisse les précédentes consultables.
+      - id: b
+        text: Il supprime toutes les versions postérieures à la version 3.
+        correct: false
+        explanation: L'historique n'est jamais réécrit par RESTORE.
+      - id: c
+        text: Il renomme la version 3 en version courante sans créer de commit.
+        correct: false
+        explanation: Toute modification d'une table Delta passe par un commit.
+      - id: d
+        text: Il exécute un VACUUM pour libérer l'espace des versions suivantes.
+        correct: false
+        explanation: RESTORE ne déclenche pas VACUUM.
+  - id: q4-vacuum
+    objectiveId: sql-delta.time-travel
+    kind: multiple
+    prompt: Quelles affirmations sur les limites du time travel sont exactes ? (plusieurs réponses)
+    sectionAnchor: les-limites-retention-et-vacuum
+    choices:
+      - id: a
+        text: Après un VACUUM, une version qui dépend de fichiers supprimés ne peut plus être lue.
+        correct: true
+        explanation: VACUUM supprime physiquement des fichiers retirés ; les versions qui en ont besoin deviennent illisibles.
+      - id: b
+        text: Le seuil de rétention par défaut de VACUUM est de 7 jours.
+        correct: true
+        explanation: La propriété delta.deletedFileRetentionDuration vaut 7 jours par défaut.
+      - id: c
+        text: Le time travel remplace une stratégie de sauvegarde.
+        correct: false
+        explanation: Il est borné par la rétention et par VACUUM ; ce n'est pas une sauvegarde.
+      - id: d
+        text: Une version encore listée par DESCRIBE HISTORY est toujours lisible.
+        correct: false
+        explanation: L'historique peut lister une version dont les fichiers ont été supprimés par VACUUM.
