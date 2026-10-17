@@ -5,13 +5,26 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
-    # next est épinglé (base de sécurité) : montée de version uniquement via ADR.
+    # next et sa config ESLint sont épinglés (ADR 0001) : montée uniquement via ADR.
+    # Les majeures de TypeScript / ESLint cassent typescript-eslint et ne doivent
+    # pas être proposées automatiquement dans le même groupe que des patchs.
     ignore:
       - dependency-name: next
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: eslint-config-next
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       dev-tooling:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: github-actions
     directory: /
     schedule:
