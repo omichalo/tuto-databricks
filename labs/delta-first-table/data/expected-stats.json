@@ -1,0 +1,54 @@
+{
+  "rows": 10000,
+  "byStatusBeforeUpdate": [
+    {
+      "status": "delivered",
+      "orders": "6000",
+      "revenue_cents": "30110137"
+    },
+    {
+      "status": "pending",
+      "orders": "2000",
+      "revenue_cents": "10044343"
+    },
+    {
+      "status": "cancelled",
+      "orders": "1000",
+      "revenue_cents": "5023731"
+    },
+    {
+      "status": "returned",
+      "orders": "1000",
+      "revenue_cents": "5011226"
+    }
+  ],
+  "byCountryDelivered": [
+    {
+      "country": "DE",
+      "delivered_orders": "1500",
+      "delivered_revenue_cents": "7539517"
+    },
+    {
+      "country": "IT",
+      "delivered_orders": "1500",
+      "delivered_revenue_cents": "7536398"
+    },
+    {
+      "country": "ES",
+      "delivered_orders": "1500",
+      "delivered_revenue_cents": "7520502"
+    },
+    {
+      "country": "FR",
+      "delivered_orders": "1500",
+      "delivered_revenue_cents": "7513720"
+    }
+  ],
+  "countries": 4,
+  "deliveredRevenueCents": 30110137,
+  "pendingBeforeUpdate": 2000,
+  "cancelledBeforeUpdate": 1000,
+  "updatedRows": 668,
+  "pendingAfterUpdate": 1332,
+  "cancelledAfterUpdate": 1668
+}

@@ -1,0 +1,10 @@
+# Approbation humaine obligatoire sur les zones sensibles.
+*                       @omichalo
+/firestore.rules        @omichalo
+/storage.rules          @omichalo
+/src/server/            @omichalo
+/src/app/api/           @omichalo
+/labs/**/validation/    @omichalo
+/.github/               @omichalo
+/apphosting*.yaml       @omichalo
+/config/security-baseline.json @omichalo

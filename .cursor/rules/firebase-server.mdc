@@ -1,0 +1,18 @@
+---
+description: Code serveur Firebase (Admin SDK, sessions, services, dépôts Firestore)
+globs: src/server/**,src/app/api/**
+alwaysApply: false
+---
+
+# Serveur Firebase
+
+- Tout fichier serveur commence par `import 'server-only';`.
+- Configuration : `serverEnv()` (Zod, `src/server/env.ts`). Ne jamais lire `process.env` ailleurs. Émulateurs interdits en production.
+- Admin SDK via `db()`, `adminAuth()`, `adminAppCheck()` ; pas d'identifiant de projet en dur (`GCLOUD_PROJECT` ou ADC).
+- Sessions : cookie `__session` HttpOnly, `verifySession` avec contrôle de révocation ; un compte permanent exige une authentification récente (< 5 min) pour ouvrir une session.
+- Les règles métier vivent dans `src/server/services/*` ; les routes ne font que valider et déléguer.
+- Écritures multi-documents dans une transaction ; opérations idempotentes (une complétion rejouée ne change rien).
+- Horodatages : epoch ms dans le domaine, `Timestamp` Firestore pour les champs `*At` via `firestore-codec.ts`.
+- Erreurs : `ApiError(code, message)` ; ne jamais renvoyer une clé, une empreinte attendue ou un code de contrôle attendu.
+- Journaux : `logger` (JSON), sans donnée personnelle ni jeton.
+- Le résultat d'un TP réel est toujours `self-reported` ; seul le serveur attribue `automatic-formative` (exercices et quiz).

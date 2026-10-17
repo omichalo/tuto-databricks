@@ -1,0 +1,17 @@
+---
+description: TP réels Databricks (manifeste, notebooks serverless, statuts, preuve de validation)
+globs: labs/**,src/domain/labs/**,scripts/labs/**,config/free-edition-features.json
+alwaysApply: false
+---
+
+# TP réels
+
+- Statut par environnement : `draft`, `experimental`, `validated`. **`validated` exige une exécution réelle et une preuve** dans `labs/<id>/validation/*.json` (schéma `validationEvidenceSchema`), avec l'empreinte des artefacts. Le hook de commit et la CI refusent sinon. Ne jamais fabriquer de preuve.
+- Toute modification d'un artefact (notebooks, données, vérification) invalide la validation : repasser en `experimental` ou revalider.
+- Procédure de bout en bout obligatoire dans `README.fr.md` : initialisation, exécution, vérification, nettoyage.
+- Free Edition : serverless uniquement (Python et SQL, pas de RDD ni `sparkContext`, pas de cache, pas de DBFS, pas de téléchargement de données, déclencheurs `availableNow`/`once` seulement). Les données sont générées dans le notebook.
+- Une fonctionnalité utilisée doit être `confirmed` dans `config/free-edition-features.json` avec une source officielle ; `unknown` interdit `supported: 'yes'`.
+- Nettoyage : supprime tous les objets créés, schéma seulement s'il est vide, jamais `CASCADE`.
+- Le résultat déclaré par l'apprenant reste `self-reported` ; le code de contrôle n'est qu'un indice de cohérence.
+- Aucune automatisation (CI, CLI, API) n'exécute de traitement sur Free Edition.
+- Après modification : `npm run labs:build-notebooks && npm run labs:check`. Skill : `databricks-lab-authoring` ; revue : `free-edition-compat-checker`.

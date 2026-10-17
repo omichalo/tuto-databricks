@@ -1,0 +1,12 @@
+title = "gitleaks - configuration du dépôt"
+
+[extend]
+useDefault = true
+
+# Faux secrets volontaires : jeux d'essai du détecteur de données sensibles des TP.
+[allowlist]
+description = "Fixtures de test du scanner de secrets"
+paths = [
+  '''tests/unit/scripts/labs-tooling\.test\.ts''',
+  '''scripts/labs/scan-sensitive\.ts''',
+]

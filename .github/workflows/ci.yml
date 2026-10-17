@@ -1,0 +1,117 @@
+# Intégration continue : aucun accès à un projet Firebase réel ni à Databricks.
+# Les émulateurs utilisent le projet de démonstration `demo-tuto-databricks`.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FIREBASE_TOOLS_VERSION: 15.34.0
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  quality:
+    name: Qualité, contenu, TP et sécurité
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: cp .env.example .env.local
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run labs:check
+      - run: npm run content:check
+      - run: npm run guards
+      - run: npm run security:baseline
+      - run: npm run security:advisories
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run build
+      - run: npm run security:bundle
+      - name: Build aux seuils de production (contenus non publiés et TP non validés masqués)
+        run: npm run build && npm run visibility:check && npm run security:bundle
+        env:
+          CONTENT_MIN_STATUS: published
+          LAB_MIN_STATUS: validated
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: content-report
+          path: content-report.json
+          if-no-files-found: ignore
+
+  secrets:
+    name: Recherche de secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  emulators:
+    name: Règles et API (Emulator Suite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm install --global firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+      - run: npm run content:build
+      - run: npm run test:emulators:run
+
+  e2e:
+    name: Parcours de bout en bout (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm install --global firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+      - run: npx playwright install --with-deps chromium
+      - run: cp .env.example .env.local
+      - run: npm run build
+      - run: >-
+          firebase emulators:exec --project demo-tuto-databricks --only auth,firestore
+          "npm run test:e2e"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

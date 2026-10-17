@@ -1,0 +1,103 @@
+---
+id: historique-time-travel
+title: Historique et time travel
+summary: Lire l'historique d'une table Delta, interroger une version passée, restaurer une table, et comprendre comment la rétention et VACUUM limitent le retour en arrière.
+status: in-technical-review
+durationMinutes: 30
+objectiveIds: [sql-delta.history, sql-delta.time-travel]
+sources:
+  - title: DESCRIBE HISTORY
+    url: https://docs.databricks.com/aws/en/sql/language-manual/delta-describe-history
+    verifiedAt: '2026-10-17'
+  - title: Work with table history
+    url: https://docs.databricks.com/aws/en/delta/history
+    verifiedAt: '2026-10-17'
+  - title: VACUUM
+    url: https://docs.databricks.com/aws/en/sql/language-manual/delta-vacuum
+    verifiedAt: '2026-10-17'
+translations:
+  fr: complete
+  en: missing
+labId: delta-first-table
+---
+
+## Lire l'historique d'une table
+
+Chaque commit du journal Delta crée une version de la table. `DESCRIBE HISTORY` les affiche, **de la plus récente à la plus ancienne** :
+
+```sql
+DESCRIBE HISTORY orders;
+```
+
+Les colonnes les plus utiles :
+
+| Colonne | Contenu |
+| --- | --- |
+| `version` | numéro de version, à partir de 0 |
+| `timestamp` | date et heure du commit |
+| `operation` | type d'opération, par exemple `WRITE`, `UPDATE`, `DELETE`, `MERGE`, ou une opération de création de table pour un `CREATE TABLE ... AS SELECT` |
+| `operationParameters` | paramètres de l'opération, comme le prédicat d'un `UPDATE` |
+| `operationMetrics` | métriques, comme le nombre de lignes modifiées ou de fichiers ajoutés |
+| `userName` | auteur de l'opération |
+
+Le libellé exact d'une création de table varie selon la commande utilisée : lisez-le dans votre propre historique plutôt que de le supposer. `DESCRIBE HISTORY orders LIMIT 1` ne renvoie que la dernière opération. L'historique est un outil d'**audit** (qui a modifié quoi, et quand) autant que de diagnostic : un nombre de lignes modifiées inattendu dans `operationMetrics` signale souvent une clause `WHERE` trop large.
+
+## Interroger une version passée : le time travel
+
+Puisque les fichiers des versions antérieures restent dans le stockage, on peut relire la table **telle qu'elle était** :
+
+```sql
+-- par numéro de version
+SELECT COUNT(*) FROM orders VERSION AS OF 3 WHERE status = 'pending';
+
+-- par horodatage
+SELECT COUNT(*) FROM orders TIMESTAMP AS OF '2026-10-17 09:00:00' WHERE status = 'pending';
+```
+
+Usages typiques :
+
+- **comparer** deux états, par exemple pour mesurer l'effet d'un traitement ;
+- **reproduire** un calcul ou l'entraînement d'un modèle sur les données exactes d'une date ;
+- **réparer** une erreur en relisant les lignes perdues.
+
+<Callout kind="tip" title="Retrouver la bonne version">
+Plutôt que de deviner un numéro, lisez-le dans `DESCRIBE HISTORY` : la version qui précède un `UPDATE` est celle de l'`UPDATE` moins un. Le TP Free Edition procède ainsi.
+</Callout>
+
+## Revenir en arrière : RESTORE
+
+`RESTORE` ramène la table à une version antérieure :
+
+```sql
+RESTORE TABLE orders TO VERSION AS OF 3;
+```
+
+`RESTORE` n'efface pas l'historique : il ajoute une **nouvelle** version dont le contenu est celui de la version 3. Les versions intermédiaires restent consultables, et vous pouvez encore annuler la restauration.
+
+## Les limites : rétention et VACUUM
+
+Le time travel n'est pas illimité. Deux mécanismes le bornent.
+
+- **La rétention du journal.** Les entrées anciennes du journal finissent par être nettoyées. Par défaut, la propriété `delta.logRetentionDuration` est de 30 jours.
+- **La suppression des fichiers retirés.** La commande `VACUUM` supprime physiquement les fichiers de données qui ne font plus partie de la version courante et sont plus anciens qu'un seuil de rétention, par défaut 7 jours (propriété `delta.deletedFileRetentionDuration`).
+
+Après un `VACUUM`, les versions qui dépendaient des fichiers supprimés **ne peuvent plus être lues**, même si elles apparaissent encore dans `DESCRIBE HISTORY`.
+
+Sur les versions récentes de Databricks Runtime, et notamment pour les tables gérées par Unity Catalog, la documentation précise en outre que le time travel au-delà de `delta.deletedFileRetentionDuration` est **bloqué même si aucun `VACUUM` n'a été exécuté**. Retenez donc la règle prudente : ne comptez pas sur une version plus ancienne que le seuil de rétention des fichiers.
+
+<Callout kind="warning" title="Le time travel n'est pas une sauvegarde">
+Le time travel sert à l'audit, au diagnostic et à la correction d'erreurs récentes. Il ne remplace pas une stratégie de sauvegarde : au-delà de la rétention, ou après un `VACUUM`, les anciennes versions sont perdues.
+</Callout>
+
+Réduire le seuil de rétention de `VACUUM` en dessous de la valeur par défaut est possible, mais risqué : des lecteurs ou des écritures en cours peuvent encore avoir besoin des fichiers supprimés. Databricks protège ce réglage par un contrôle de sécurité qu'il faut désactiver explicitement.
+
+## Pratiquer sur Databricks Free Edition
+
+Dans le TP « Votre première table Delta », vous lirez l'historique de la table `orders` avant et après votre `UPDATE`, puis vous compterez les commandes `pending` dans la version précédant la modification avec `VERSION AS OF`. La cellule de vérification contrôle ces résultats et affiche un code de contrôle.
+
+## À retenir
+
+- `DESCRIBE HISTORY` liste les versions, avec l'opération et ses métriques.
+- `VERSION AS OF` et `TIMESTAMP AS OF` lisent une version passée sans la modifier.
+- `RESTORE` ajoute une nouvelle version égale à une version passée.
+- La rétention du journal et `VACUUM` limitent le time travel : ce n'est pas une sauvegarde.

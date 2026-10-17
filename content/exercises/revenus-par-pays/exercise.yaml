@@ -1,0 +1,43 @@
+# Exercice SQL formatif exécuté dans le navigateur (DuckDB-Wasm).
+# `solutionSql` et `expectedHash` ne sont jamais envoyés au navigateur (séparés par scripts/build-content.ts).
+id: revenus-par-pays
+title: Chiffre d'affaires livré par pays
+objectiveIds: [sql-delta.aggregate, sql-delta.where-vs-having]
+statement: >-
+  La table `orders` contient 2 000 commandes synthétiques (même générateur que le TP Free Edition, sur
+  un volume réduit). Pour chaque pays, calculez le nombre de commandes livrées (`status = 'delivered'`)
+  et le chiffre d'affaires livré en euros, arrondi à 2 décimales (`amount_cents` est en centimes).
+  Ne gardez que les pays dont le chiffre d'affaires livré dépasse 14 600 €, puis triez par chiffre
+  d'affaires décroissant. Colonnes attendues, dans cet ordre : `country`, `delivered_orders`,
+  `delivered_revenue_eur`.
+hints:
+  - 'Le filtre sur le statut porte sur chaque ligne avant le regroupement : il va dans WHERE.'
+  - 'Le seuil de 14 600 € porte sur un agrégat calculé par groupe : il va dans HAVING.'
+  - 14 600 € = 1 460 000 centimes. Divisez par 100.0 (et non 100) pour éviter une division entière dans certains moteurs.
+  - Pour rester portable entre moteurs, répétez l'expression d'agrégat dans HAVING au lieu d'utiliser l'alias de colonne.
+dataset:
+  generator: labs/delta-first-table/data/generator.sql
+  rows: 2000
+  table: orders
+starterSql: |-
+  SELECT country,
+         COUNT(*) AS delivered_orders
+  FROM orders
+  GROUP BY country
+ordered: true
+expectedShape:
+  columns: [country, delivered_orders, delivered_revenue_eur]
+  rowCount: 2
+expectedHash: 'e7e133e1c88ba549b33ef0dc215dc42c1158d1626e900188e12658aaabef9a04'
+solutionSql: |-
+  SELECT country,
+         COUNT(*) AS delivered_orders,
+         ROUND(SUM(amount_cents) / 100.0, 2) AS delivered_revenue_eur
+  FROM orders
+  WHERE status = 'delivered'
+  GROUP BY country
+  HAVING SUM(amount_cents) > 1460000
+  ORDER BY delivered_revenue_eur DESC
+dialectNotes:
+  - Le navigateur exécute DuckDB, pas Databricks SQL. Cette requête n'utilise que du SQL standard accepté par les deux moteurs.
+  - Sur Databricks, la même requête s'exécute telle quelle sur la table du TP Free Edition (10 000 lignes, résultats différents).

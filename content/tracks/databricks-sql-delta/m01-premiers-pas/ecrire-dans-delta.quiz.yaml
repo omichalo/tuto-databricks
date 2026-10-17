@@ -1,0 +1,90 @@
+lessonId: ecrire-dans-delta
+questions:
+  - id: q1-create-or-replace
+    objectiveId: sql-delta.ctas
+    kind: single
+    prompt: Quelle différence entre CREATE OR REPLACE TABLE t AS SELECT ... et DROP TABLE t suivi de CREATE TABLE t AS SELECT ... ?
+    sectionAnchor: creer-une-table-a-partir-dune-requete-ctas
+    choices:
+      - id: a
+        text: CREATE OR REPLACE crée une nouvelle version de la même table en une seule transaction et conserve l'historique.
+        correct: true
+        explanation: Le remplacement est atomique et ajoute une version ; DROP puis CREATE crée une nouvelle table sans l'historique de l'ancienne, avec un instant où la table n'existe pas.
+      - id: b
+        text: Aucune, les deux séquences sont strictement équivalentes.
+        correct: false
+        explanation: Elles diffèrent par l'atomicité et par la conservation de l'historique.
+      - id: c
+        text: CREATE OR REPLACE ne peut pas changer le schéma de la table.
+        correct: false
+        explanation: Le schéma est redéfini par la requête du CTAS ; il peut donc changer.
+      - id: d
+        text: CREATE OR REPLACE produit une table externe.
+        correct: false
+        explanation: Sans LOCATION, la table reste gérée par Unity Catalog.
+  - id: q2-format
+    objectiveId: sql-delta.ctas
+    kind: single
+    prompt: Sur Databricks, quel est le format d'une table créée par CREATE TABLE t AS SELECT ..., sans clause USING ?
+    sectionAnchor: creer-une-table-a-partir-dune-requete-ctas
+    choices:
+      - id: a
+        text: Delta
+        correct: true
+        explanation: Delta est le format de table par défaut sur Databricks.
+      - id: b
+        text: Parquet sans journal de transactions
+        correct: false
+        explanation: Les données sont bien en Parquet, mais accompagnées du journal Delta ; ce n'est pas une simple table Parquet.
+      - id: c
+        text: CSV
+        correct: false
+        explanation: CSV n'est jamais le format par défaut d'une table.
+      - id: d
+        text: Le format de la table source de la requête
+        correct: false
+        explanation: Le format ne dépend pas de la source, mais du défaut de la plateforme (Delta).
+  - id: q3-update-where
+    objectiveId: sql-delta.dml
+    kind: single
+    prompt: Avant d'exécuter un UPDATE sur une table de production, quelle précaution permet d'en mesurer l'effet ?
+    sectionAnchor: modifier-et-supprimer-update-et-delete
+    choices:
+      - id: a
+        text: Exécuter un SELECT COUNT(*) avec exactement la même clause WHERE.
+        correct: true
+        explanation: Le comptage indique combien de lignes seront modifiées, sans rien changer.
+      - id: b
+        text: Retirer la clause WHERE pour vérifier que la requête est valide.
+        correct: false
+        explanation: Un UPDATE sans WHERE modifie toutes les lignes — c'est le risque à éviter.
+      - id: c
+        text: Exécuter VACUUM avant l'UPDATE.
+        correct: false
+        explanation: VACUUM supprime d'anciens fichiers et réduit les possibilités de retour en arrière ; il n'aide pas à prévoir l'effet de l'UPDATE.
+      - id: d
+        text: Convertir la table en table externe.
+        correct: false
+        explanation: Le type de table n'a aucun rapport avec l'effet d'un UPDATE.
+  - id: q4-immutabilite
+    objectiveId: sql-delta.delta-format
+    kind: single
+    prompt: Que deviennent les fichiers Parquet qui contenaient les lignes modifiées par un UPDATE ?
+    sectionAnchor: ce-que-produit-une-ecriture-dans-le-journal
+    choices:
+      - id: a
+        text: Ils sont retirés de la version courante par un commit mais restent dans le stockage, ce qui permet le time travel.
+        correct: true
+        explanation: Les fichiers sont immuables ; le commit les retire de la table, et ils ne sont supprimés physiquement que plus tard (VACUUM).
+      - id: b
+        text: Ils sont modifiés sur place pour contenir les nouvelles valeurs.
+        correct: false
+        explanation: Delta ne modifie jamais un fichier Parquet existant.
+      - id: c
+        text: Ils sont supprimés immédiatement du stockage.
+        correct: false
+        explanation: Une suppression immédiate rendrait impossible la lecture des versions antérieures.
+      - id: d
+        text: Ils sont déplacés dans le répertoire _delta_log.
+        correct: false
+        explanation: Le journal ne contient que les commits (JSON) et les checkpoints, pas les fichiers de données.

@@ -1,0 +1,16 @@
+---
+description: Exigences de sécurité (secrets, auth, données, correcteur SQL isolé)
+globs: src/server/**,src/app/api/**,firestore.rules,apphosting*.yaml,.github/**,next.config.ts
+alwaysApply: false
+---
+
+# Sécurité
+
+- Secrets uniquement via Secret Manager, référencés dans `apphosting*.yaml` (`secret:`), jamais en clair.
+- Entrées : schémas Zod `.strict()`, taille limitée ; identifiants contrôlés par regex ; quotas par utilisateur.
+- Comparaisons de secrets ou d'empreintes : `timingSafeEqual`.
+- Ne jamais révéler la réponse attendue (quiz, empreinte, code de contrôle) dans une erreur ou un journal.
+- Le correcteur SQL serveur reste désactivé : `SQL_SERVER_GRADING_ENABLED` est le littéral `"false"`. L'activer exige une ADR, un projet isolé et des tests adversariaux (skill `sql-grader-isolation`).
+- Pas de fusion implicite de comptes : un conflit de lien renvoie `account-exists`.
+- Données personnelles minimales (uid, fournisseur, horodatages) ; aucune donnée d'apprenant dans les journaux.
+- Revue `/review-security` pour toute modification d'auth, de règles, d'API ou du correcteur.

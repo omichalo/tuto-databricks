@@ -1,0 +1,26 @@
+# Configuration commune App Hosting (surchargée par apphosting.<ENV>.yaml).
+# Aucun identifiant réel ici : les valeurs propres à un projet vont dans les fichiers d'environnement
+# et les secrets sont référencés dans Secret Manager.
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: SQL_SERVER_GRADING_ENABLED
+    value: 'false'
+    availability: [RUNTIME]
+  - variable: CONTENT_MIN_STATUS
+    value: published
+    availability: [BUILD, RUNTIME]
+  - variable: LAB_MIN_STATUS
+    value: validated
+    availability: [BUILD, RUNTIME]
+  - variable: APP_CHECK_ENFORCED
+    value: 'false'
+    availability: [RUNTIME]
+  - variable: NEXT_PUBLIC_PRODUCT_NAME
+    value: Orion Data Lab
+    availability: [BUILD, RUNTIME]

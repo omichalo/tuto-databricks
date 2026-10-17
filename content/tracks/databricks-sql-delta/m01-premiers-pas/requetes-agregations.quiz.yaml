@@ -1,0 +1,94 @@
+lessonId: requetes-agregations
+questions:
+  - id: q1-where-having
+    objectiveId: sql-delta.where-vs-having
+    kind: single
+    prompt: Vous voulez le chiffre d'affaires des seules commandes livrées, par pays, en ne gardant que les pays au-dessus d'un seuil. Où placer chaque filtre ?
+    sectionAnchor: filtrer-les-groupes-avec-having
+    choices:
+      - id: a
+        text: Le filtre sur le statut dans WHERE, le seuil sur le chiffre d'affaires dans HAVING.
+        correct: true
+        explanation: Le statut est une propriété de chaque ligne (WHERE, avant regroupement) ; le seuil porte sur un agrégat par pays (HAVING, après calcul).
+      - id: b
+        text: Les deux filtres dans WHERE.
+        correct: false
+        explanation: WHERE s'évalue avant le calcul des agrégats ; WHERE SUM(...) > ... est refusé.
+      - id: c
+        text: Les deux filtres dans HAVING.
+        correct: false
+        explanation: Après regroupement par pays, la colonne status n'existe plus au niveau du groupe ; ce filtre doit agir sur les lignes.
+      - id: d
+        text: Le seuil dans WHERE, le statut dans HAVING.
+        correct: false
+        explanation: C'est exactement l'inverse de l'ordre d'évaluation — l'agrégat n'existe pas encore au moment du WHERE.
+  - id: q2-regle-group-by
+    objectiveId: sql-delta.aggregate
+    kind: single
+    prompt: 'Pourquoi la requête suivante échoue-t-elle ?'
+    code: |-
+      SELECT status, customer_id, COUNT(*)
+      FROM orders
+      GROUP BY status
+    sectionAnchor: regrouper-avec-group-by
+    choices:
+      - id: a
+        text: customer_id n'est ni dans le GROUP BY ni dans une fonction d'agrégat.
+        correct: true
+        explanation: Chaque groupe de statut contient de nombreux clients ; le moteur ne peut pas choisir une seule valeur de customer_id par ligne de résultat.
+      - id: b
+        text: COUNT(*) doit obligatoirement recevoir un alias.
+        correct: false
+        explanation: L'alias est recommandé pour la lisibilité, mais il n'est pas obligatoire.
+      - id: c
+        text: GROUP BY exige un ORDER BY.
+        correct: false
+        explanation: ORDER BY est indépendant du regroupement et toujours facultatif.
+      - id: d
+        text: On ne peut pas regrouper sur une colonne de type chaîne.
+        correct: false
+        explanation: On peut regrouper sur n'importe quel type comparable, dont les chaînes.
+  - id: q3-ordre
+    objectiveId: sql-delta.aggregate
+    kind: single
+    prompt: Dans l'ordre logique d'évaluation d'une requête, laquelle de ces clauses est évaluée en dernier ?
+    sectionAnchor: lordre-logique-devaluation
+    choices:
+      - id: a
+        text: ORDER BY
+        correct: true
+        explanation: Le tri s'applique au résultat final, après SELECT ; c'est pourquoi il peut utiliser les alias.
+      - id: b
+        text: HAVING
+        correct: false
+        explanation: HAVING s'évalue juste après le calcul des agrégats, avant SELECT et ORDER BY.
+      - id: c
+        text: WHERE
+        correct: false
+        explanation: WHERE est l'une des premières étapes, juste après FROM.
+      - id: d
+        text: GROUP BY
+        correct: false
+        explanation: GROUP BY forme les groupes avant le calcul des agrégats et bien avant le tri.
+  - id: q4-count
+    objectiveId: sql-delta.aggregate
+    kind: multiple
+    prompt: Parmi ces affirmations sur les fonctions d'agrégat, lesquelles sont exactes ? (plusieurs réponses)
+    sectionAnchor: regrouper-avec-group-by
+    choices:
+      - id: a
+        text: COUNT(*) compte les lignes du groupe, y compris celles qui contiennent des valeurs nulles.
+        correct: true
+        explanation: COUNT(*) compte les lignes, quel que soit leur contenu.
+      - id: b
+        text: COUNT(col) ignore les lignes où col est nulle.
+        correct: true
+        explanation: COUNT(col) ne compte que les valeurs non nulles de la colonne.
+      - id: c
+        text: COUNT(DISTINCT customer_id) compte le nombre de commandes.
+        correct: false
+        explanation: Il compte le nombre de clients distincts, pas le nombre de commandes.
+      - id: d
+        text: Sans ORDER BY, les groupes sont toujours renvoyés dans l'ordre alphabétique.
+        correct: false
+        explanation: Sans ORDER BY, l'ordre du résultat n'est jamais garanti, même s'il paraît stable.

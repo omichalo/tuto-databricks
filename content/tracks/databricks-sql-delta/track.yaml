@@ -1,0 +1,20 @@
+id: databricks-sql-delta
+version: 1.0.0
+title: 'Databricks SQL et Delta Lake : premiers pas'
+summary: >-
+  Comprendre le lakehouse et le format Delta, interroger des tables avec SQL, écrire dans une table
+  Delta puis exploiter son historique. Chaque notion se pratique dans le navigateur, puis sur votre
+  propre workspace Databricks Free Edition.
+level: beginner
+objectiveFiles: [databricks-sql-delta]
+modules:
+  - id: m01-premiers-pas
+    title: Premiers pas avec les tables Delta
+    summary: >-
+      Du modèle lakehouse à la première table Delta : lecture, agrégation, écriture, historique et
+      time travel.
+    lessons:
+      - lakehouse-et-delta
+      - requetes-agregations
+      - ecrire-dans-delta
+      - historique-time-travel

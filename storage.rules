@@ -1,0 +1,10 @@
+rules_version = '2';
+
+// Aucun usage de Cloud Storage au lancement : refus total.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

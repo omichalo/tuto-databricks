@@ -1,0 +1,116 @@
+---
+id: lakehouse-et-delta
+title: Le lakehouse et le format Delta
+summary: Pourquoi Databricks réunit data lake et entrepôt de données, et comment le journal de transactions Delta rend un stockage objet fiable comme une base de données.
+status: in-technical-review
+durationMinutes: 25
+objectiveIds: [sql-delta.lakehouse, sql-delta.delta-format, sql-delta.namespace, sql-delta.managed-tables]
+sources:
+  - title: What is a data lakehouse?
+    url: https://docs.databricks.com/aws/en/lakehouse/
+    verifiedAt: '2026-10-17'
+  - title: What is Delta Lake in Databricks?
+    url: https://docs.databricks.com/aws/en/delta/
+    verifiedAt: '2026-10-17'
+  - title: What are ACID guarantees on Databricks?
+    url: https://docs.databricks.com/aws/en/lakehouse/acid
+    verifiedAt: '2026-10-17'
+  - title: What is Unity Catalog?
+    url: https://docs.databricks.com/aws/en/data-governance/unity-catalog/
+    verifiedAt: '2026-10-17'
+  - title: Unity Catalog managed tables
+    url: https://docs.databricks.com/aws/en/tables/managed
+    verifiedAt: '2026-10-17'
+translations:
+  fr: complete
+  en: missing
+labId: delta-first-table
+---
+
+## Le problème : deux systèmes pour une seule donnée
+
+Pendant longtemps, les organisations ont maintenu deux plateformes séparées.
+
+- **Le data lake** stocke des fichiers (CSV, JSON, Parquet) dans un stockage objet bon marché comme Amazon S3, Azure Data Lake Storage ou Google Cloud Storage. Il accepte tous les formats et tous les volumes, mais il n'offre aucune garantie transactionnelle : deux traitements qui écrivent en même temps peuvent laisser des fichiers à moitié écrits, et un lecteur peut voir un état incohérent.
+- **L'entrepôt de données** offre des transactions, un schéma imposé et de bonnes performances SQL, mais il est coûteux, réservé aux données structurées et souvent alimenté par des copies du data lake.
+
+Cette architecture à deux étages a trois défauts : les données sont dupliquées, les copies prennent du retard, et la sécurité doit être gérée deux fois.
+
+## Le lakehouse : un seul stockage, des garanties d'entrepôt
+
+Un **lakehouse** conserve le stockage objet ouvert du data lake et y ajoute ce qui manquait : des transactions ACID (atomicité, cohérence, isolation, durabilité : une écriture s'applique entièrement ou pas du tout, et les lecteurs ne voient jamais d'état intermédiaire), la gestion du schéma, la gouvernance et des performances adaptées au SQL comme au machine learning. Sur Databricks, cette couche repose sur deux briques :
+
+- **Delta Lake**, le format de table par défaut, qui apporte les transactions ;
+- **Unity Catalog**, qui gouverne l'accès aux données et les organise.
+
+<Callout kind="info" title="Format ouvert">
+Une table Delta est un ensemble de fichiers Parquet accompagné d'un journal de transactions. Ces fichiers restent dans votre stockage, dans un format ouvert : d'autres moteurs compatibles Delta peuvent les lire.
+</Callout>
+
+## Comment Delta rend le stockage objet transactionnel
+
+Un stockage objet ne sait ni verrouiller un ensemble de fichiers ni annuler une écriture partielle. Delta contourne ce problème avec un **journal de transactions**, le répertoire `_delta_log` placé à côté des fichiers de données.
+
+1. Chaque écriture (insertion, mise à jour, suppression, changement de schéma) écrit d'abord de **nouveaux** fichiers Parquet. Elle ne modifie jamais un fichier existant.
+2. Elle ajoute ensuite au journal un fichier de **commit** JSON numéroté, qui liste les fichiers ajoutés et les fichiers retirés de la table.
+3. Une table est, à un instant donné, l'ensemble des fichiers que le journal déclare présents. Chaque commit crée une nouvelle **version** de la table, numérotée à partir de 0.
+
+Ce mécanisme explique les garanties ACID :
+
+- **Atomicité** : tant que le commit n'est pas écrit, les nouveaux fichiers sont invisibles. Une écriture interrompue ne laisse aucun état intermédiaire visible.
+- **Cohérence** : le schéma de la table est enregistré dans le journal, et Delta refuse par défaut une écriture dont le schéma ne correspond pas.
+- **Isolation** : un lecteur lit une version précise et n'est pas perturbé par une écriture concurrente. Deux écritures concurrentes incompatibles sont détectées : l'une des deux échoue au lieu de corrompre la table.
+- **Durabilité** : une fois le commit écrit dans le stockage objet, la transaction est acquise.
+
+Pour éviter de relire des milliers de petits fichiers JSON, Delta écrit périodiquement des **checkpoints** au format Parquet qui résument l'état de la table.
+
+<Callout kind="tip" title="Ce que cela vous apporte dès maintenant">
+Puisque les anciennes versions restent décrites dans le journal, vous pouvez consulter l'historique d'une table et relire une version passée. C'est le **time travel**, que vous pratiquerez dans la dernière leçon de ce module.
+</Callout>
+
+## Organiser les données : le nom à trois niveaux
+
+Unity Catalog organise les objets selon une hiérarchie :
+
+- un **catalogue** regroupe des schémas, souvent par domaine, par environnement ou par équipe ;
+- un **schéma** (aussi appelé base de données) regroupe des tables, des vues, des volumes et des fonctions ;
+- une **table** contient les données.
+
+Une table se désigne donc par un nom complet à trois niveaux :
+
+```sql
+SELECT * FROM mon_catalogue.ventes.orders;
+```
+
+Vous pouvez aussi définir un catalogue et un schéma courants pour écrire des noms plus courts :
+
+```sql
+USE CATALOG mon_catalogue;
+USE SCHEMA ventes;
+SELECT * FROM orders;
+```
+
+<Callout kind="warning" title="Ne codez pas un nom de catalogue en dur">
+Le nom du catalogue dépend du workspace : celui d'un workspace Free Edition n'est pas celui de votre entreprise. Les notebooks de cette formation lisent le catalogue courant avec `current_catalog()` ou le demandent dans un widget.
+</Callout>
+
+## Tables gérées et tables externes
+
+Lorsque vous créez une table sans préciser d'emplacement, Unity Catalog crée une **table gérée** : il choisit où stocker les fichiers et gère leur cycle de vie. Une table gérée est au format Delta.
+
+Une **table externe** pointe vers un emplacement de stockage que vous désignez explicitement avec `LOCATION`. Unity Catalog gouverne l'accès, mais les fichiers vous appartiennent.
+
+La différence apparaît surtout à la suppression :
+
+- `DROP TABLE` sur une **table gérée** supprime la table du catalogue ; Databricks supprime ensuite ses fichiers de données à l'expiration d'une période de récupération (7 jours par défaut), pendant laquelle la table peut encore être restaurée ;
+- `DROP TABLE` sur une **table externe** retire seulement la définition de la table : les fichiers restent à l'emplacement indiqué.
+
+Dans ce parcours, toutes les tables sont gérées : c'est le choix recommandé par défaut, et c'est ce qui permet au TP de tout nettoyer avec quelques `DROP TABLE`.
+
+## À retenir
+
+- Le lakehouse unifie data lake et entrepôt : un seul stockage ouvert, avec des garanties transactionnelles.
+- Une table Delta est faite de fichiers Parquet et d'un journal `_delta_log` ; chaque commit crée une nouvelle version.
+- Les écritures ajoutent des fichiers puis un commit : c'est ce qui les rend atomiques et isolées.
+- Unity Catalog nomme les tables `catalogue.schéma.table`.
+- Une table créée sans `LOCATION` est une table gérée : `DROP TABLE` supprime aussi ses données, après une période de récupération (7 jours par défaut).

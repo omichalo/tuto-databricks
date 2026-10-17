@@ -1,0 +1,14 @@
+---
+description: Règles de sécurité Firestore et Storage, et leurs tests
+globs: firestore.rules,storage.rules,firestore.indexes.json,tests/emulators/**
+alwaysApply: false
+---
+
+# Règles Firestore
+
+- Le client n'écrit jamais : `allow write: if false` partout. Les écritures passent par l'Admin SDK.
+- Lecture : seulement les documents du propriétaire (`request.auth.uid == userId`). Aucun `get()`/`exists()` (coût et complexité).
+- `storage.rules` : refus total (pas de Cloud Storage au lancement).
+- Toute modification des règles s'accompagne d'un test dans `tests/emulators/firestore-rules.test.ts` couvrant le refus (autre utilisateur, anonyme, écriture) et l'autorisation attendue.
+- Pour rédiger ou durcir des règles, déléguer au subagent `firestore-rules-author` ; audit par `security-auditor`.
+- Index : uniquement ceux réellement requis par une requête serveur, avec exemptions pour les champs volumineux.

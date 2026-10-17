@@ -1,0 +1,28 @@
+# Backend de recette (branche `staging`). Valeurs REPLACE_* à fournir avant le premier rollout.
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+
+env:
+  - variable: APP_ENV
+    value: staging
+    availability: [BUILD, RUNTIME]
+  - variable: APP_ORIGIN
+    value: https://REPLACE_WITH_STAGING_BACKEND_URL
+    availability: [BUILD, RUNTIME]
+  - variable: CONTENT_MIN_STATUS
+    value: in-technical-review
+    availability: [BUILD, RUNTIME]
+  - variable: LAB_MIN_STATUS
+    value: experimental
+    availability: [BUILD, RUNTIME]
+  # Passer à 'true' seulement quand les clés reCAPTCHA Enterprise de staging existent.
+  - variable: APP_CHECK_ENFORCED
+    value: 'false'
+    availability: [RUNTIME]
+  - variable: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
+    value: REPLACE_WITH_STAGING_RECAPTCHA_SITE_KEY
+    availability: [BUILD]
+  - variable: SQL_SERVER_GRADING_ENABLED
+    value: 'false'
+    availability: [RUNTIME]

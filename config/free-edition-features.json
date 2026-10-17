@@ -1,0 +1,76 @@
+{
+  "$comment": "Vocabulaire fermé des fonctionnalités exigées par les labs. 'confirmed' = documenté officiellement ET (à terme) observé lors d'une validation réelle. Un lab ne peut déclarer Free Edition 'yes' que si toutes ses requiredFeatures sont 'confirmed'. Revoir à chaque changement des conditions ou limites de Free Edition.",
+  "reviewedAt": "2026-10-17",
+  "features": {
+    "serverless-notebook": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/getting-started/free-edition-limitations",
+      "note": "Free Edition ne propose que du calcul serverless (notebooks, jobs, un SQL warehouse de petite taille)."
+    },
+    "notebook-import-ipynb": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/notebooks/notebook-export-import",
+      "note": "Import de fichiers .ipynb et de sources .py au format Databricks."
+    },
+    "widgets": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/notebooks/widgets",
+      "note": "dbutils.widgets disponible sur le calcul serverless des notebooks."
+    },
+    "unity-catalog-managed-table": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/tables/managed",
+      "note": "Les tables créées sans LOCATION dans Unity Catalog sont gérées et au format Delta."
+    },
+    "delta-update": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/sql/language-manual/delta-update",
+      "note": "UPDATE sur table Delta."
+    },
+    "delta-describe-history": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/sql/language-manual/delta-describe-history",
+      "note": "DESCRIBE HISTORY sur table Delta."
+    },
+    "delta-time-travel-version": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/delta/history",
+      "note": "Lecture d'une version antérieure avec VERSION AS OF."
+    },
+    "create-schema-in-workspace-catalog": {
+      "status": "unknown",
+      "source": "https://docs.databricks.com/aws/en/getting-started/import-visualize-data",
+      "note": "Non documenté (fact-check du 2026-10-17) : droit de création de schéma à confirmer lors de la première validation réelle. Les labs se replient sur le schéma default avec un préfixe de table."
+    },
+    "outbound-internet-download": {
+      "status": "unavailable",
+      "source": "https://docs.databricks.com/aws/en/getting-started/free-edition-limitations",
+      "note": "Accès Internet sortant restreint : les données doivent être générées dans le notebook ou téléversées manuellement."
+    },
+    "classic-cluster": {
+      "status": "unavailable",
+      "source": "https://docs.databricks.com/aws/en/getting-started/free-edition-limitations",
+      "note": "Pas de calcul classique (clusters configurables) sur Free Edition."
+    },
+    "scala-or-r": {
+      "status": "unavailable",
+      "source": "https://docs.databricks.com/aws/en/compute/serverless/limitations",
+      "note": "Le calcul serverless ne prend en charge que Python et SQL."
+    },
+    "default-schema-in-workspace-catalog": {
+      "status": "confirmed",
+      "source": "https://docs.databricks.com/aws/en/getting-started/import-visualize-data",
+      "note": "Les utilisateurs Free Edition disposent par défaut de privilèges sur le catalogue de l'espace et son schéma default. Le catalogue porte le nom de l'espace : les notebooks utilisent current_catalog() plutôt qu'un nom codé en dur."
+    },
+    "personal-access-token": {
+      "status": "unknown",
+      "source": "https://docs.databricks.com/aws/en/getting-started/free-edition-limitations",
+      "note": "La documentation (fact-check du 2026-10-17) ne dit pas si les PAT de workspace ou la CLI fonctionnent sur Free Edition ; seul l'accès à la console et aux API de compte est exclu. Aucune automatisation n'est configurée : elle exigerait une validation préalable des conditions d'utilisation."
+    },
+    "non-commercial-use-only": {
+      "status": "confirmed",
+      "source": "https://www.databricks.com/legal/databricks-free-edition",
+      "note": "Conditions §3.1 : usage personnel et sans but lucratif (interne, personnel, académique ou associatif). La FAQ (https://www.databricks.com/learn/free-edition) exclut l'usage commercial."
+    }
+  }
+}
