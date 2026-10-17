@@ -1,0 +1,23 @@
+---
+description: Conventions App Router (pages SSG, Route Handlers, composants serveur et client)
+globs: src/app/**,src/components/**
+alwaysApply: false
+---
+
+# App Router
+
+- Pages de contenu : SSG avec `generateStaticParams` et `dynamicParams = false`. La visibilité (`CONTENT_MIN_STATUS`, `LAB_MIN_STATUS`) est résolue au build par `src/server/visibility.ts`.
+- Toute mutation passe par un Route Handler `src/app/api/**/route.ts` construit avec `route()` de `src/server/route.ts` (origine, App Check, session, Zod strict, quota). Jamais de Server Actions (`'use server'` interdit).
+- Composants serveur par défaut ; `'use client'` seulement pour l'interactivité. Un composant client n'importe jamais `src/server/**`, `firebase-admin` ni `src/generated/server-*`.
+- Le client appelle l'API via `apiJson`/`apiBlob` (`src/lib/client/api.ts`), jamais Firestore.
+- Textes d'interface : `src/i18n/messages.ts` (FR obligatoire, EN facultatif). Pas de chaîne en dur dans les composants.
+- Styles : CSS Modules et jetons de `src/app/globals.css`. Accessibilité : rôles, `aria-live` pour les résultats, focus visible.
+
+```ts
+// ✅ Route Handler
+export const dynamic = 'force-dynamic';
+export const POST = route(
+  { name: 'exercise.check', auth: 'required', body, rateLimit: { limit: 30, windowSeconds: 60 } },
+  async ({ user, body: input }) => jsonResponse(await checkExercise(user.uid, id, input.resultHash)),
+);
+```

@@ -26,11 +26,14 @@
     "test:e2e": "playwright test",
     "labs:check": "tsx scripts/labs/check-all.ts",
     "labs:build-notebooks": "tsx scripts/labs/build-notebooks.ts",
-    "content:check": "tsx scripts/content-report.ts --strict",
+    "content:check": "tsx scripts/content-report.ts --strict && tsx scripts/content/exercise-hashes.ts",
     "security:baseline": "tsx scripts/check-security-baseline.ts",
+    "security:advisories": "tsx scripts/check-next-advisories.ts",
     "security:bundle": "tsx --conditions=react-server scripts/check-client-bundle.ts",
+    "guards": "tsx scripts/guards/invariants.ts",
+    "visibility:check": "tsx scripts/check-visibility.ts",
     "emulators": "firebase emulators:start --project demo-tuto-databricks --only auth,firestore",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run labs:check && npm run content:check && npm run security:baseline"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run labs:check && npm run content:check && npm run guards && npm run security:baseline"
   },
   "overrides": {
     "sharp": "0.35.5",

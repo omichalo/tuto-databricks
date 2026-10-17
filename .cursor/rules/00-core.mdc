@@ -1,0 +1,30 @@
+---
+description: Règles transverses du dépôt (stack, TypeScript strict, contrôles, statuts, interdits)
+alwaysApply: true
+---
+
+# Socle
+
+- Stack : Next.js 15.5.28 (App Router), React 19, TypeScript strict, Firebase (App Hosting, Auth, Firestore, Admin SDK, App Check), Emulator Suite. Pas de PostgreSQL, Prisma ni Kubernetes sans ADR justifiée.
+- TypeScript uniquement (aucun `.js` écrit à la main), `strict`, pas d'`any` implicite ni explicite. Respecter ESLint et Prettier du projet ; aucun code qui ne compile pas.
+- Nom du produit : uniquement via `src/config/product.ts` (`PRODUCT.name`). Ne jamais écrire « Databricks Academy ».
+
+## Avant de déclarer une tâche terminée
+
+```bash
+npm run check          # format, lint, typecheck, unit, labs:check, content:check, guards, security:baseline
+npm run build && npm run security:bundle
+npm run test:emulators:run   # nécessite Java 21 (voir docs/runbooks/local-dev.md)
+```
+
+## Interdits
+
+- Aucun identifiant réel de projet, clé ou secret dans le dépôt : espaces réservés `<...>` et demander à l'utilisateur.
+- Aucun déploiement, aucune ressource cloud, aucune dépense sans accord explicite de l'utilisateur (hook `guard-shell`).
+- Aucune automatisation exécutant des traitements sur Databricks Free Edition.
+- Ne jamais lire `.env*` (hors `.env.example`).
+
+## Statuts de livraison (docs/status.md)
+
+`Non commencé` → `Implémenté` → `Testé localement` → `Testé en staging` → `Validé pour la production`.
+N'annoncer un statut que s'il a été atteint et vérifié ; mettre à jour `docs/status.md` et `docs/roadmap.md` à chaque incrément.

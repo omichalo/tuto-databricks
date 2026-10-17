@@ -1,0 +1,14 @@
+---
+description: Base de sécurité Next.js (versions, en-têtes, fonctionnalités interdites)
+globs: next.config.ts,package.json,package-lock.json,config/security-baseline.json,src/middleware.ts
+alwaysApply: false
+---
+
+# Base de sécurité Next.js
+
+- `next` est épinglé à une version exacte (15.5.28). Repli autorisé : 16.4.1 via ADR. Avant tout changement de version : vérifier les avis GitHub/npm réellement publiés ; ne jamais retenir une version avec une vulnérabilité critique ou élevée non résolue.
+- Toute nouvelle dépendance : version exacte, vérification des avis, `npm audit --omit=dev` = 0, puis `npm run security:baseline`.
+- Une alerte de dépendance de développement n'est tolérée que listée dans `config/security-baseline.json` avec justification et `reviewBy`.
+- Interdits : `middleware.ts`, Server Actions, `next/og`, `images.remotePatterns` ouverts, `dangerouslySetInnerHTML` sur du contenu non maîtrisé.
+- En-têtes dans `next.config.ts` : CSP, HSTS, `nosniff`, `frame-ancestors 'none'`, `poweredByHeader: false`. Les hôtes d'émulateurs n'apparaissent dans la CSP que si les émulateurs sont activés.
+- Après build : `npm run security:bundle` (aucune clé de correction dans le bundle client).

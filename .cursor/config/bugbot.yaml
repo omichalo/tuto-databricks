@@ -1,0 +1,19 @@
+# Consignes Bugbot pour les PR de ce dépôt.
+instructions: |
+  Signaler en priorité :
+  - toute mutation qui ne passe pas par route() (src/server/route.ts) ou sans schéma Zod strict ;
+  - toute fuite vers le client de QUIZ_KEYS, EXERCISE_KEYS, expectedHash, codes de contrôle ou notebooks de solution ;
+  - tout import de firebase/firestore, firebase-admin ou src/server depuis un composant client ;
+  - toute règle Firestore autorisant une écriture client ou une lecture hors propriétaire ;
+  - un TP passé en "validated" sans preuve dans labs/<id>/validation/ ;
+  - un résultat de TP présenté comme vérifié alors qu'il est self-reported ;
+  - SQL_SERVER_GRADING_ENABLED différent de "false" ;
+  - un identifiant réel de projet, une clé ou un secret ;
+  - une dépendance sans version exacte ou une version Next.js différente de celle épinglée ;
+  - un usage de "any", de Server Actions, de middleware.ts ou de next/og ;
+  - une automatisation exécutant des traitements sur Databricks Free Edition.
+ignore:
+  - src/generated/**
+  - public/vendor/**
+  - public/labs/**
+  - labs/**/notebooks/*.ipynb

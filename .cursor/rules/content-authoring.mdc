@@ -1,0 +1,14 @@
+---
+description: Rédaction des leçons, quiz et exercices (définition de Done, sources, statuts)
+globs: content/**
+alwaysApply: false
+---
+
+# Contenu pédagogique
+
+- Français obligatoire (`*.fr.mdx`), anglais facultatif ; une traduction absente retombe sur le FR avec un bandeau.
+- Statuts : `draft` → `in-technical-review` → `in-pedagogical-review` → `published` (puis `deprecated`). Un contenu n'est `published` qu'après double relecture humaine (technique et pédagogique), consignée avec relecteur et date dans `docs/status.md`.
+- Chaque leçon : 2 à 5 objectifs de `content/objectives/*.yaml`, sources officielles datées (`sources[].url`, `verifiedAt`, domaines autorisés dans `src/domain/content/schema.ts`), une interaction (`exerciseId`, `labId` ou `interactionWaiver` justifiée).
+- Toute affirmation sur Databricks est vérifiable dans la documentation officielle. En cas de doute : subagent `databricks-fact-checker`, et ne pas l'écrire tant que ce n'est pas confirmé.
+- Les clés de quiz et les empreintes d'exercices restent dans les fichiers serveur générés : jamais dans le MDX public.
+- Après modification : `npm run content:build && npm run content:check`.

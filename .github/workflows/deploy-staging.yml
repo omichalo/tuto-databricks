@@ -1,0 +1,40 @@
+# Déploiement des règles et index Firestore vers le projet de STAGING.
+# Préparé mais inactif : il ne s'exécute que manuellement ET si la variable de dépôt
+# STAGING_DEPLOY_ENABLED vaut "true" (à créer uniquement après accord explicite, voir
+# docs/runbooks/staging-deploy.md). Authentification par Workload Identity Federation, sans clé.
+# L'application elle-même est déployée par App Hosting (branche `staging` connectée au backend).
+# Aucune étape ne cible la production ni Databricks.
+name: Déploiement staging (règles Firestore)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-rules:
+    if: ${{ vars.STAGING_DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/staging' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.STAGING_WIF_PROVIDER }}
+          service_account: ${{ vars.STAGING_DEPLOY_SERVICE_ACCOUNT }}
+      - run: npm install --global firebase-tools@15.34.0
+      - name: Déployer règles et index (staging uniquement)
+        run: >-
+          firebase deploy --non-interactive
+          --project "${{ vars.STAGING_FIREBASE_PROJECT_ID }}"
+          --only firestore:rules,firestore:indexes

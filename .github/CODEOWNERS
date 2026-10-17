@@ -1,0 +1,11 @@
+# Approbation humaine obligatoire. Remplacer <OWNER> par le compte GitHub du mainteneur
+# une fois le dépôt créé (information à fournir par l'utilisateur).
+*                       @<OWNER>
+/firestore.rules        @<OWNER>
+/storage.rules          @<OWNER>
+/src/server/            @<OWNER>
+/src/app/api/           @<OWNER>
+/labs/**/validation/    @<OWNER>
+/.github/               @<OWNER>
+/apphosting*.yaml       @<OWNER>
+/config/security-baseline.json @<OWNER>

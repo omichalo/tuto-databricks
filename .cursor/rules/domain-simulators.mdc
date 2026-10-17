@@ -1,0 +1,14 @@
+---
+description: Domaine pur (contenu, quiz, SQL, labs, progression) et simulateurs pédagogiques
+globs: src/domain/**
+alwaysApply: false
+---
+
+# Domaine
+
+- `src/domain/**` est pur : aucune dépendance à Next, React, Firebase ni au DOM. Testable avec Vitest seul.
+- Types dérivés des schémas Zod (`z.infer`) ; énumérations en `as const`.
+- Un simulateur (Delta, Spark, architecture) modélise un comportement documenté de Databricks : citer la source dans le contenu et signaler les simplifications à l'apprenant.
+- Ne jamais présenter un résultat simulé comme le comportement exact de Databricks.
+- Empreinte de résultat SQL : `src/domain/sql/result-fingerprint.ts` (forme canonique stable) ; toute modification invalide les empreintes existantes et exige de régénérer le contenu.
+- Chaque nouvelle fonction du domaine est couverte par un test dans `tests/unit/domain/`.

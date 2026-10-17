@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "npx --no-install tsx .cursor/hooks/guard-shell.ts",
+        "timeout": 60,
+        "failClosed": true
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "npx --no-install tsx .cursor/hooks/guard-read.ts",
+        "matcher": "Read",
+        "timeout": 15,
+        "failClosed": true
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "npx --no-install tsx .cursor/hooks/after-edit.ts",
+        "timeout": 60
+      }
+    ]
+  }
+}

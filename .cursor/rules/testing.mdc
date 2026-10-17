@@ -1,0 +1,15 @@
+---
+description: Stratégie et conventions de test (unitaires, émulateurs, E2E, artefacts)
+globs: tests/**,vitest.config.ts,playwright.config.ts
+alwaysApply: false
+---
+
+# Tests
+
+- Unitaires (`tests/unit`, projet Vitest `unit`) : domaine, scripts de labs, politiques de sécurité. Rapides, sans réseau.
+- Émulateurs (`tests/emulators`, projet `emulators`, exécution séquentielle) : règles Firestore et parcours API complets via Auth et Firestore émulés. Projet `demo-tuto-databricks` uniquement.
+- E2E (`tests/e2e`, Playwright) : build de production et émulateurs ; parcours apprenant, en-têtes, refus d'origine.
+- Artefacts de TP : `npm run labs:check` (référence DuckDB, synchronisation, lint serverless, nettoyage, secrets).
+- Chaque correctif de défaut ajoute un test qui échouait avant.
+- Tester aussi les refus (401, 403, 409, 429) et l'absence de fuite (clé, empreinte, code attendu).
+- Un test n'est jamais désactivé pour faire passer la CI ; signaler le problème dans `docs/status.md`.

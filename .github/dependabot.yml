@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # next est épinglé (base de sécurité) : montée de version uniquement via ADR.
+    ignore:
+      - dependency-name: next
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+    groups:
+      dev-tooling:
+        dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
