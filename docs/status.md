@@ -30,7 +30,7 @@ Statuts de livraison : `Non commencé` → `Implémenté` → `Testé localement
 | Déclaration de TP (`self-reported`), avis Free Edition versionné          | Testé localement     | émulateurs (403 sans avis, 409 version périmée) + E2E                                                                                                     |
 | Tableau de bord « Vérifié par la plateforme » / « Déclaré par vous »      | Testé localement     | E2E                                                                                                                                                       |
 | Configuration Cursor (rules, skills, subagents, hooks, Bugbot)            | Testé localement     | hooks testés en conditions réelles (lecture `.env` bloquée, faux positif corrigé) et 46 tests unitaires de politique                                      |
-| CI GitHub Actions                                                         | Implémenté           | `actionlint` vert ; **jamais exécutée** (pas de dépôt GitHub)                                                                                             |
+| CI GitHub Actions                                                         | Implémenté           | `actionlint` vert ; dépôt public `omichalo/tuto-databricks` créé le 2026-10-17 (gitleaks sur tout l'historique : aucune fuite)                            |
 | Déploiement staging (App Hosting, règles)                                 | Implémenté (préparé) | `apphosting.staging.yaml`, `deploy-staging.yml` inactif, runbook ; bloqué par les identifiants                                                            |
 
 Tests au 2026-10-17 (après corrections des revues) : **115 unitaires**, **28 émulateurs**, **7 E2E** Playwright, tous verts ; `actionlint` et `security:advisories` verts.
@@ -72,7 +72,6 @@ Aucun TP n'est `validated`. En production (`LAB_MIN_STATUS=validated`), aucun en
 | Blocage                                                                | Bloque                                 | Information à fournir                                                      |
 | ---------------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
 | Projets Firebase staging et production (Blaze), région                 | staging, preuve App Hosting de 15.5.28 | ID de projet, accord de dépense, `europe-west4` / `eur3`                   |
-| Dépôt GitHub                                                           | CI réelle, CODEOWNERS, App Hosting     | propriétaire et nom                                                        |
 | Clés reCAPTCHA Enterprise                                              | App Check                              | une clé par environnement                                                  |
 | Conditions d'usage Free Edition pour la validation par les mainteneurs | validation réelle des TP               | décision écrite (usage personnel non commercial de la personne qui valide) |
 | Workspace Free Edition de test                                         | `phase1-free-edition-validation`       | personne physique, compte personnel                                        |

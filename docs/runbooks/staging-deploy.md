@@ -8,7 +8,7 @@
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | ID du projet Firebase staging (offre Blaze)                         | `.firebaserc` (`staging`), variable GitHub `STAGING_FIREBASE_PROJECT_ID` |
 | Région App Hosting et Firestore (proposé : `europe-west4` / `eur3`) | création du backend et de la base                                        |
-| Dépôt GitHub et branche `staging`                                   | connexion App Hosting, CODEOWNERS (`<OWNER>`)                            |
+| Branche `staging` du dépôt `omichalo/tuto-databricks`               | connexion App Hosting                                                    |
 | Domaine ou URL App Hosting attendue                                 | `APP_ORIGIN` dans `apphosting.staging.yaml`                              |
 | Clé de site reCAPTCHA Enterprise (staging)                          | `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY`, App Check                   |
 | E-mail d'alerte et montant du budget                                | alerte de facturation                                                    |
