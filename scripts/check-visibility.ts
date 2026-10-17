@@ -42,6 +42,9 @@ for (const lab of LABS) {
   if (routes.has(route) !== expected) {
     errors.push(`${route} : page ${expected ? 'attendue' : 'interdite'} (seuil ${min})`);
   }
+  if (!expected && existsSync(join(ROOT, 'public', 'labs', id))) {
+    errors.push(`public/labs/${id} : artefacts publiés alors que le TP est masqué (seuil ${min})`);
+  }
 }
 
 if (errors.length > 0) {

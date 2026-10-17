@@ -15,6 +15,7 @@ import type {
   PublicTrack,
 } from '../src/domain/content/public-types';
 import type { LabArtifactRef, PublicLab } from '../src/domain/labs/types';
+import { isContentVisible, parseContentMinStatus } from '../src/domain/content/status';
 import { effectiveLabStatus } from '../src/domain/labs/status';
 import type { QuizKeyQuestion } from '../src/domain/quiz/grade';
 import { contentIntegrityErrors, loadContent } from './content/load-content';
@@ -148,11 +149,20 @@ function main(): void {
     string,
     { checkCode: string; canary: string; solutionIpynb: string; labVersion: string }
   > = {};
+  // Seuil explicite (CI, App Hosting) : seuls les TP référencés par une leçon visible sont publiés
+  // dans public/. Sans seuil (développement local), tout est copié.
+  const rawMin = process.env.CONTENT_MIN_STATUS;
+  const publishable = (labId: string): boolean => {
+    if (rawMin === undefined || rawMin === '') return true;
+    const min = parseContentMinStatus(rawMin);
+    return lessons.some((l) => l.labId === labId && isContentVisible(l.status, min));
+  };
   for (const lab of labs) {
     const m = lab.manifest;
     const hash = computeArtifactHash(lab.dir);
     const outDir = join(PUBLIC_LABS, m.id);
-    mkdirSync(outDir, { recursive: true });
+    const publish = publishable(m.id);
+    if (publish) mkdirSync(outDir, { recursive: true });
     const artifacts: LabArtifactRef[] = [];
     const downloadable: [LabArtifactRef['kind'], string][] = [
       ['exercise-notebook', 'notebooks/exercise.ipynb'],
@@ -163,7 +173,7 @@ function main(): void {
     for (const [kind, rel] of downloadable) {
       const src = join(lab.dir, rel);
       const fileName = `${m.id}-${rel.split('/').pop() ?? rel}`;
-      copyFileSync(src, join(outDir, fileName));
+      if (publish) copyFileSync(src, join(outDir, fileName));
       artifacts.push({
         kind,
         fileName,
