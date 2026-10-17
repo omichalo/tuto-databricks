@@ -6,6 +6,14 @@ const useEmulators = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
 if (useEmulators && process.env.APP_ENV === 'production') {
   throw new Error('NEXT_PUBLIC_USE_FIREBASE_EMULATORS est interdit pour un build de production');
 }
+if (process.env.APP_ENV === 'staging' || process.env.APP_ENV === 'production') {
+  const placeholders = Object.entries(process.env)
+    .filter(([, value]) => value?.includes('REPLACE_WITH_') === true)
+    .map(([name]) => name);
+  if (placeholders.length > 0) {
+    throw new Error(`Espaces réservés non remplacés : ${placeholders.join(', ')}`);
+  }
+}
 
 function contentSecurityPolicy(): string {
   const firebaseConnect = [
@@ -67,6 +75,11 @@ const nextConfig: NextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         ],
+      },
+      {
+        // URL versionnées : contenu immuable pour une version donnée de DuckDB-Wasm.
+        source: '/vendor/duckdb/:version/:file*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ];
   },

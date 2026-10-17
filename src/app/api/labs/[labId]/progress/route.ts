@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { SELF_REPORT_PROVIDERS } from '@/domain/labs/providers';
 import { ApiError } from '@/server/errors';

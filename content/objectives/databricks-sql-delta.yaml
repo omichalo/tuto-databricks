@@ -16,6 +16,12 @@ objectives:
       - title: What is Delta Lake in Databricks?
         url: https://docs.databricks.com/aws/en/delta/
         verifiedAt: '2026-10-17'
+      - title: What are ACID guarantees on Databricks?
+        url: https://docs.databricks.com/aws/en/lakehouse/acid
+        verifiedAt: '2026-10-17'
+      - title: Work with table history
+        url: https://docs.databricks.com/aws/en/delta/history
+        verifiedAt: '2026-10-17'
   - id: sql-delta.namespace
     bloom: apply
     fr: Désigner une table par son nom complet à trois niveaux (catalogue.schéma.table) dans Unity Catalog.

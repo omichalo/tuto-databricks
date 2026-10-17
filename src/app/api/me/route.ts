@@ -1,3 +1,4 @@
+import 'server-only';
 import { jsonResponse, route } from '@/server/route';
 import { readProfile } from '@/server/services/user-service';
 

@@ -12,6 +12,9 @@ sources:
   - title: What is Delta Lake in Databricks?
     url: https://docs.databricks.com/aws/en/delta/
     verifiedAt: '2026-10-17'
+  - title: What are ACID guarantees on Databricks?
+    url: https://docs.databricks.com/aws/en/lakehouse/acid
+    verifiedAt: '2026-10-17'
   - title: What is Unity Catalog?
     url: https://docs.databricks.com/aws/en/data-governance/unity-catalog/
     verifiedAt: '2026-10-17'
@@ -35,7 +38,7 @@ Cette architecture à deux étages a trois défauts : les données sont dupliqu�
 
 ## Le lakehouse : un seul stockage, des garanties d'entrepôt
 
-Un **lakehouse** conserve le stockage objet ouvert du data lake et y ajoute ce qui manquait : des transactions ACID, la gestion du schéma, la gouvernance et des performances adaptées au SQL comme au machine learning. Sur Databricks, cette couche repose sur deux briques :
+Un **lakehouse** conserve le stockage objet ouvert du data lake et y ajoute ce qui manquait : des transactions ACID (atomicité, cohérence, isolation, durabilité : une écriture s'applique entièrement ou pas du tout, et les lecteurs ne voient jamais d'état intermédiaire), la gestion du schéma, la gouvernance et des performances adaptées au SQL comme au machine learning. Sur Databricks, cette couche repose sur deux briques :
 
 - **Delta Lake**, le format de table par défaut, qui apporte les transactions ;
 - **Unity Catalog**, qui gouverne l'accès aux données et les organise.
@@ -99,7 +102,7 @@ Une **table externe** pointe vers un emplacement de stockage que vous désignez 
 
 La différence apparaît surtout à la suppression :
 
-- `DROP TABLE` sur une **table gérée** supprime la table du catalogue, puis ses fichiers de données sont supprimés par Databricks ;
+- `DROP TABLE` sur une **table gérée** supprime la table du catalogue ; Databricks supprime ensuite ses fichiers de données à l'expiration d'une période de récupération (7 jours par défaut), pendant laquelle la table peut encore être restaurée ;
 - `DROP TABLE` sur une **table externe** retire seulement la définition de la table : les fichiers restent à l'emplacement indiqué.
 
 Dans ce parcours, toutes les tables sont gérées : c'est le choix recommandé par défaut, et c'est ce qui permet au TP de tout nettoyer avec quelques `DROP TABLE`.
@@ -110,4 +113,4 @@ Dans ce parcours, toutes les tables sont gérées : c'est le choix recommandé p
 - Une table Delta est faite de fichiers Parquet et d'un journal `_delta_log` ; chaque commit crée une nouvelle version.
 - Les écritures ajoutent des fichiers puis un commit : c'est ce qui les rend atomiques et isolées.
 - Unity Catalog nomme les tables `catalogue.schéma.table`.
-- Une table créée sans `LOCATION` est une table gérée : `DROP TABLE` supprime aussi ses données.
+- Une table créée sans `LOCATION` est une table gérée : `DROP TABLE` supprime aussi ses données, après une période de récupération (7 jours par défaut).

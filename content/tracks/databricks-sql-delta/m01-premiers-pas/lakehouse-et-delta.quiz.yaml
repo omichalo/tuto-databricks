@@ -75,7 +75,7 @@ questions:
       - id: a
         text: La table est une table gérée — ses fichiers de données sont supprimés par Databricks après le DROP.
         correct: true
-        explanation: Sans LOCATION, Unity Catalog crée une table gérée dont il gère le stockage ; le DROP entraîne la suppression de ses données.
+        explanation: Sans LOCATION, Unity Catalog crée une table gérée dont il gère le stockage ; le DROP entraîne la suppression de ses données, à l'issue d'une période de récupération (7 jours par défaut).
       - id: b
         text: Les fichiers restent dans le stockage et peuvent être rattachés à une nouvelle table.
         correct: false

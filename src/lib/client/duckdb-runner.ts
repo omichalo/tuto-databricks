@@ -6,6 +6,9 @@ const DUCKDB_VERSION = '1.32.0';
 const BASE = `/vendor/duckdb/${DUCKDB_VERSION}`;
 export const QUERY_TIMEOUT_MS = 10_000;
 const MAX_DISPLAY_ROWS = 200;
+/** Au-delà, le résultat n'est pas matérialisé côté page (protection mémoire de l'onglet). */
+export const MAX_RESULT_ROWS = 10_000;
+const MEMORY_LIMIT = '256MB';
 
 export interface QueryOutput {
   readonly columns: readonly string[];
@@ -45,6 +48,7 @@ async function startEngine(): Promise<Engine> {
   const conn = await db.connect();
   // Aucun accès réseau ni fichier depuis le SQL de l'apprenant, et configuration verrouillée.
   await conn.query('SET enable_external_access = false');
+  await conn.query(`SET memory_limit = '${MEMORY_LIMIT}'`);
   await conn.query('SET lock_configuration = true');
   return { db, worker, conn };
 }
@@ -86,6 +90,35 @@ function toCell(value: unknown, typeName: string): CellValue {
   return JSON.stringify(value);
 }
 
+export class ResultTooLargeError extends Error {
+  constructor() {
+    super(
+      `Résultat limité à ${String(MAX_RESULT_ROWS)} lignes : ajoutez un filtre ou une agrégation`,
+    );
+  }
+}
+
+/** Après une erreur, vérifie que le worker répond encore (sinon il sera recréé). */
+async function engineHealthy(): Promise<boolean> {
+  const current = engine;
+  if (current === null) return true;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const { conn } = await current;
+    const ping = conn.query('SELECT 1').then(() => true);
+    const late = new Promise<boolean>((resolve) => {
+      timer = setTimeout(() => {
+        resolve(false);
+      }, 2_000);
+    });
+    return await Promise.race([ping, late]);
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function withTimeout<T>(work: Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
@@ -97,7 +130,7 @@ async function withTimeout<T>(work: Promise<T>): Promise<T> {
     return await Promise.race([work, timeout]);
   } catch (error) {
     // Une requête interminable bloque le worker : on le termine et on repart d'un moteur neuf.
-    if (error instanceof QueryTimeoutError) await resetEngine();
+    if (error instanceof QueryTimeoutError || !(await engineHealthy())) await resetEngine();
     throw error;
   } finally {
     clearTimeout(timer);
@@ -120,6 +153,7 @@ export async function runExerciseQuery(
       await conn.query(`DROP TABLE IF EXISTS ${table}`);
       await conn.query(setupSql);
       const result = await conn.query(sql);
+      if (result.numRows > MAX_RESULT_ROWS) throw new ResultTooLargeError();
       const fields = result.schema.fields;
       const columns = fields.map((f) => f.name);
       const rows: CellValue[][] = [];

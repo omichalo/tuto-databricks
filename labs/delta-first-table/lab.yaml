@@ -7,10 +7,11 @@ summary: >-
   table par CTAS, la modifier avec UPDATE, puis lire son historique et une version antérieure.
 trackId: databricks-sql-delta
 moduleId: m01-premiers-pas
-lessonIds: [lakehouse-et-delta, ecrire-dans-delta, historique-time-travel]
+lessonIds: [lakehouse-et-delta, requetes-agregations, ecrire-dans-delta, historique-time-travel]
 objectiveIds:
   - sql-delta.namespace
   - sql-delta.managed-tables
+  - sql-delta.aggregate
   - sql-delta.ctas
   - sql-delta.dml
   - sql-delta.history
@@ -62,7 +63,7 @@ environments:
 
 prerequisites:
   - Un compte Databricks Free Edition personnel (ou un workspace professionnel autorisé)
-  - La leçon « Écrire dans une table Delta »
+  - Les leçons « Écrire dans une table Delta » et « Historique et time travel »
 
 setup:
   catalog: widget `catalog`, catalogue courant (current_catalog()) si vide

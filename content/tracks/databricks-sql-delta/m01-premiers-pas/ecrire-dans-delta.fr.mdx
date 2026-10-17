@@ -4,7 +4,7 @@ title: Écrire dans une table Delta
 summary: Créer une table par CTAS, y ajouter des lignes, les modifier avec UPDATE ou DELETE, et comprendre ce que chaque écriture produit dans le journal Delta.
 status: in-technical-review
 durationMinutes: 35
-objectiveIds: [sql-delta.ctas, sql-delta.dml, sql-delta.delta-format, sql-delta.managed-tables]
+objectiveIds: [sql-delta.ctas, sql-delta.dml, sql-delta.delta-format]
 sources:
   - title: CREATE TABLE [USING]
     url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-create-table-using
@@ -92,8 +92,10 @@ Un `UPDATE` ou un `DELETE` sans `WHERE` s'applique à **toutes** les lignes. Ava
 Les fichiers Parquet sont **immuables** : Delta ne les modifie jamais sur place. Lors d'un `UPDATE`, Delta :
 
 1. repère les fichiers qui contiennent au moins une ligne concernée ;
-2. écrit les lignes modifiées dans de **nouveaux** fichiers (ou, si la fonctionnalité *deletion vectors* est activée, marque les lignes supprimées sans réécrire tout le fichier) ;
-3. ajoute un commit qui retire les anciens fichiers de la table et ajoute les nouveaux.
+2. écrit la nouvelle version des lignes modifiées dans de **nouveaux** fichiers ;
+3. ajoute un commit qui enregistre ce changement dans le journal.
+
+Sans *deletion vectors*, chaque fichier concerné est entièrement réécrit (lignes inchangées comprises) et l'ancien fichier est retiré de la table. Avec les *deletion vectors*, l'ancien fichier est conservé : ses lignes périmées sont seulement marquées comme supprimées, ce qui évite de réécrire les lignes inchangées. Une réécriture physique a lieu plus tard, par exemple lors d'un `OPTIMIZE`.
 
 Les anciens fichiers ne sont pas effacés immédiatement : ils restent dans le stockage, simplement retirés de la version courante. C'est ce qui rend possibles l'historique et le time travel, étudiés dans la leçon suivante.
 

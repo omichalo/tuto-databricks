@@ -19,6 +19,12 @@ test('les en-têtes de sécurité sont présents', async ({ request }) => {
   expect(headers['x-powered-by']).toBeUndefined();
 });
 
+test('les fichiers DuckDB-Wasm versionnés sont mis en cache durablement', async ({ request }) => {
+  const res = await request.get('/vendor/duckdb/1.32.0/duckdb-browser-eh.worker.js');
+  expect(res.status()).toBe(200);
+  expect(res.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+});
+
 test('une écriture depuis une origine étrangère est refusée', async ({ request }) => {
   const res = await request.post('/api/progress/lessons', {
     headers: { origin: 'https://evil.example', 'content-type': 'application/json' },

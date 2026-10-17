@@ -63,6 +63,29 @@ describe('hook beforeShellExecution', () => {
     expect(permission(cmd)).toBe('allow');
   });
 
+  it.each([
+    'firebase --project staging deploy --only firestore:rules',
+    'npx firebase-tools@15.34.0 --non-interactive deploy',
+  ])('demande confirmation quel que soit l’ordre des arguments : %s', (cmd) => {
+    expect(permission(cmd)).toBe('ask');
+  });
+
+  it.each([
+    `python3 -c "print(open('.env.local').read())"`,
+    'git show HEAD:.env.local',
+    "node -e \"require('fs').readFileSync('.env')\"",
+    'cp .env.local /tmp/x',
+  ])('demande confirmation pour toute mention d’un .env : %s', (cmd) => {
+    expect(permission(cmd)).toBe('ask');
+  });
+
+  it.each(['cp .env.example .env.example.bak', 'git add .env.example', 'npm run dev'])(
+    'laisse passer sans .env sensible : %s',
+    (cmd) => {
+      expect(permission(cmd)).toBe('allow');
+    },
+  );
+
   it('vérifie les invariants avant un commit', () => {
     expect(permission('git commit -m "x"')).toBe('run-invariants');
     expect(

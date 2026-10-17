@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { jsonResponse, route } from '@/server/route';
 import { checkQuiz } from '@/server/services/learning-service';

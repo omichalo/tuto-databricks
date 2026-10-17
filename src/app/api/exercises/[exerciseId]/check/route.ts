@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { ApiError } from '@/server/errors';
 import { jsonResponse, route } from '@/server/route';

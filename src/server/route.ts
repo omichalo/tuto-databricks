@@ -1,5 +1,5 @@
 import 'server-only';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { z } from 'zod';
 import { adminAppCheck } from './firebase-admin';
 import { ApiError } from './errors';
@@ -17,6 +17,8 @@ export interface RouteOptions<TBody> {
   readonly auth: AuthMode;
   readonly body?: z.ZodType<TBody>;
   readonly rateLimit?: RateLimitRule;
+  /** Quota par client réseau (empreinte de l'IP), appliqué avant toute authentification. */
+  readonly clientRateLimit?: RateLimitRule;
 }
 
 export interface RouteContext<TBody, TUser> {
@@ -73,14 +75,46 @@ async function checkAppCheck(request: Request): Promise<void> {
   }
 }
 
+const TOO_LARGE = (): ApiError => new ApiError('bad-request', 'Corps de requête trop volumineux');
+
+/** Lit le corps en s'arrêtant dès MAX_BODY_BYTES, sans le matérialiser entièrement. */
+async function readLimitedText(request: Request): Promise<string> {
+  const declared = Number(request.headers.get('content-length') ?? '0');
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) throw TOO_LARGE();
+  if (request.body === null) return '';
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read().catch(() => {
+      throw new ApiError('bad-request', 'Corps de requête interrompu');
+    });
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_BODY_BYTES) {
+      await reader.cancel();
+      throw TOO_LARGE();
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+/** Empreinte non réversible du client réseau (première adresse de X-Forwarded-For). */
+function clientKey(request: Request): string | null {
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const ip =
+    forwarded !== undefined && forwarded !== '' ? forwarded : request.headers.get('x-real-ip');
+  if (ip === null || ip === '') return null;
+  return `ip_${createHash('sha256').update(`rate-limit:${ip}`).digest('hex').slice(0, 32)}`;
+}
+
 async function parseBody<TBody>(
   request: Request,
   schema: z.ZodType<TBody> | undefined,
 ): Promise<TBody> {
   if (schema === undefined) return undefined as TBody;
-  const text = await request.text();
-  if (text.length > MAX_BODY_BYTES)
-    throw new ApiError('bad-request', 'Corps de requête trop volumineux');
+  const text = await readLimitedText(request);
   let json: unknown;
   try {
     json = text === '' ? {} : JSON.parse(text);
@@ -115,6 +149,10 @@ export function route<TBody, A extends AuthMode>(
     try {
       checkOrigin(request);
       await checkAppCheck(request);
+      if (options.clientRateLimit !== undefined) {
+        const key = clientKey(request);
+        if (key !== null) await enforceRateLimit(key, options.name, options.clientRateLimit);
+      }
       const user =
         options.auth === 'none' ? null : await verifySession(readCookie(request, SESSION_COOKIE));
       if (options.auth === 'required' && user === null) {

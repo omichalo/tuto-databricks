@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { jsonResponse, route } from '@/server/route';
 import {
@@ -13,7 +14,12 @@ export const dynamic = 'force-dynamic';
 const body = z.object({ idToken: z.string().min(10).max(4096) }).strict();
 
 export const POST = route(
-  { name: 'session.create', auth: 'none', body },
+  {
+    name: 'session.create',
+    auth: 'none',
+    body,
+    clientRateLimit: { limit: 20, windowSeconds: 600 },
+  },
   async ({ body: input }) => {
     const { cookie, user } = await createSession(input.idToken);
     await ensureProfile(user);
@@ -24,7 +30,7 @@ export const POST = route(
 );
 
 export const DELETE = route({ name: 'session.delete', auth: 'optional' }, async ({ user }) => {
-  if (user !== null && !user.isAnonymous) await revokeSessions(user.uid);
+  if (user !== null) await revokeSessions(user.uid);
   const response = jsonResponse({ ok: true });
   response.headers.append('set-cookie', sessionCookieAttributes('', 0));
   return response;

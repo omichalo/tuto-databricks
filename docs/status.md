@@ -21,7 +21,7 @@ Statuts de livraison : `Non commencé` → `Implémenté` → `Testé localement
 | Design system et mise en page (FR/EN, mode sombre, accessibilité de base) | Implémenté           | vérification visuelle dans Chromium ; pas d'audit d'accessibilité outillé                                                                                 |
 | Auth anonyme + session `__session`                                        | Testé localement     | `tests/emulators/api-flow.test.ts`, E2E (session anonyme créée automatiquement)                                                                           |
 | Liaison anonyme → Google (sans fusion implicite)                          | Implémenté           | code et refus `account-exists` ; **non testé** (popup Google non automatisée sur l'émulateur)                                                             |
-| Chaîne `route()` (origine, App Check, session, Zod strict, quotas)        | Testé localement     | 24 tests d'émulateurs : 401, 403 (origine absente ou étrangère), 400, cookie forgé, 429                                                                   |
+| Chaîne `route()` (origine, App Check, session, Zod strict, quotas)        | Testé localement     | 28 tests d'émulateurs : 401, 403, 400, cookie forgé, 429, corps > 16 Ko (déclaré ou en flux), quota de sessions, révocation anonyme                       |
 | Règles Firestore et Storage                                               | Testé localement     | `tests/emulators/firestore-rules.test.ts`                                                                                                                 |
 | Progression des leçons (vue, terminée, synthèse du parcours)              | Testé localement     | émulateurs (idempotence) + E2E                                                                                                                            |
 | Quiz corrigé côté serveur                                                 | Testé localement     | émulateurs + navigateur (score, explications, liens « Relire la section »)                                                                                |
@@ -29,11 +29,11 @@ Statuts de livraison : `Non commencé` → `Implémenté` → `Testé localement
 | Moteur de TP (manifeste, fournisseurs, chaîne d'artefacts)                | Testé localement     | `labs:check` (6 contrôles) + tests unitaires des règles de chaque contrôle                                                                                |
 | Déclaration de TP (`self-reported`), avis Free Edition versionné          | Testé localement     | émulateurs (403 sans avis, 409 version périmée) + E2E                                                                                                     |
 | Tableau de bord « Vérifié par la plateforme » / « Déclaré par vous »      | Testé localement     | E2E                                                                                                                                                       |
-| Configuration Cursor (rules, skills, subagents, hooks, Bugbot)            | Testé localement     | hooks testés en conditions réelles (lecture `.env` bloquée, faux positif corrigé) et 37 tests unitaires de politique                                      |
+| Configuration Cursor (rules, skills, subagents, hooks, Bugbot)            | Testé localement     | hooks testés en conditions réelles (lecture `.env` bloquée, faux positif corrigé) et 46 tests unitaires de politique                                      |
 | CI GitHub Actions                                                         | Implémenté           | `actionlint` vert ; **jamais exécutée** (pas de dépôt GitHub)                                                                                             |
 | Déploiement staging (App Hosting, règles)                                 | Implémenté (préparé) | `apphosting.staging.yaml`, `deploy-staging.yml` inactif, runbook ; bloqué par les identifiants                                                            |
 
-Tests au 2026-10-17 : **102 unitaires**, **24 émulateurs**, **6 E2E** Playwright, tous verts.
+Tests au 2026-10-17 (après corrections des revues) : **115 unitaires**, **28 émulateurs**, **7 E2E** Playwright, tous verts ; `actionlint` et `security:advisories` verts.
 
 ## TP réels
 
@@ -58,8 +58,14 @@ Aucun TP n'est `validated`. En production (`LAB_MIN_STATUS=validated`), aucun en
 2. Alertes de dépendances de **développement** uniquement (braces, micromatch, fast-glob via `eslint-config-next`) : acceptées dans `config/security-baseline.json` jusqu'au 2026-11-17 ; `npm audit --omit=dev` = 0.
 3. Les avis du dépôt `vercel/next.js` peuvent précéder `npm audit` : `security:advisories` les contrôle (plages parfois mal formées, décision par `patched_versions`).
 4. Liaison anonyme → Google : peut demander deux fenêtres (liaison puis réauthentification récente) ; non testée automatiquement.
-5. DuckDB-Wasm : ~34 Mo non compressés téléchargés au premier exercice (bundle `eh`).
+5. DuckDB-Wasm : ~34 Mo non compressés téléchargés au premier exercice (bundle `eh`), désormais en cache `immutable`. Le plafond de 10 000 lignes est contrôlé après transfert du résultat Arrow : il protège le rendu, pas la mémoire du worker (bornée par `memory_limit = 256MB`).
 6. Plusieurs identifiants d'avis cités dans le plan initial n'ont pas été retrouvés ; l'ADR 0001 ne cite que des avis vérifiés.
+7. Comptes anonymes multiples (Sybil) : les quotas par `uid` se contournent en recréant des comptes. Atténuation actuelle : quota de création de session par client réseau (20 / 10 min, empreinte SHA-256 de l'IP). À compléter en staging : App Check appliqué, alertes de budget, quota global éventuel.
+8. Quotas Firestore : une transaction par requête limitée (coût et contention par document) ; acceptable au lancement, à revoir à la charge (phase 8).
+9. `readTrackProgress` lit tous les `exerciseResults` et `labProgress` de l'utilisateur : borné par la taille du catalogue, à paginer ou synthétiser en phase 2.
+10. `attempts` d'un exercice compte aussi les nouvelles soumissions après réussite (sémantique « nombre de soumissions »).
+11. Par conception : `expectedResults` du TP et la formule du code de contrôle sont publics ; le code est un indice de cohérence, jamais une preuve (résultat `self-reported`).
+12. Hooks Cursor : garde-fous d'assistance, non une frontière de sécurité (contournables par un shell arbitraire) ; durcis pour toute mention de `.env*` et `firebase … deploy` quel que soit l'ordre des arguments.
 
 ## Blocages externes
 

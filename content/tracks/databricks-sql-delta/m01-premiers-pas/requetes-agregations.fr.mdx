@@ -4,7 +4,7 @@ title: Interroger et agréger avec SQL
 summary: Lire une table, filtrer les lignes, regrouper avec GROUP BY et filtrer les groupes avec HAVING, en comprenant l'ordre logique d'évaluation d'une requête.
 status: in-technical-review
 durationMinutes: 30
-objectiveIds: [sql-delta.aggregate, sql-delta.where-vs-having, sql-delta.namespace]
+objectiveIds: [sql-delta.aggregate, sql-delta.where-vs-having]
 sources:
   - title: GROUP BY clause
     url: https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby
@@ -110,7 +110,7 @@ Cet ordre explique la plupart des erreurs de débutant. Par exemple, un alias d�
 
 L'exercice ci-dessous s'exécute dans votre navigateur avec **DuckDB**, un moteur SQL embarqué. Ce n'est pas Databricks : DuckDB et Databricks SQL ont chacun leurs extensions et leurs fonctions propres. L'exercice se limite donc au SQL standard qu'acceptent les deux moteurs, et la même requête fonctionne telle quelle sur la table du TP Free Edition.
 
-La vérification compare l'**empreinte** de votre résultat (valeurs et ordre des lignes) à celle de la solution. Les noms de colonnes n'interviennent pas, seulement leur position. Elle est **formative** : elle vous aide à progresser, mais elle ne constitue pas une certification.
+La vérification compare l'**empreinte** de votre résultat (valeurs et ordre des lignes) à celle de la solution. Vous pouvez nommer les colonnes comme vous voulez (les alias ne comptent pas), mais elles doivent apparaître dans l'ordre demandé par l'énoncé. Elle est **formative** : elle vous aide à progresser, mais elle ne constitue pas une certification.
 
 ## À retenir
 

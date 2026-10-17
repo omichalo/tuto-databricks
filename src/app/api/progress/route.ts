@@ -1,3 +1,4 @@
+import 'server-only';
 import { ApiError } from '@/server/errors';
 import { jsonResponse, route } from '@/server/route';
 import { readTrackProgress } from '@/server/services/progress-service';

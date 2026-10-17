@@ -3,7 +3,7 @@
  * jeton anonyme → cookie de session → Route Handlers → documents Firestore.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
-import { POST as sessionPost } from '@/app/api/session/route';
+import { DELETE as sessionDelete, POST as sessionPost } from '@/app/api/session/route';
 import { POST as lessonPost } from '@/app/api/progress/lessons/route';
 import { GET as progressGet } from '@/app/api/progress/route';
 import { POST as quizPost } from '@/app/api/quiz/check/route';
@@ -314,6 +314,91 @@ describe('TP Free Edition auto-déclaré', () => {
       params({ labId: LAB }),
     );
     expect(res.status).toBe(401);
+  });
+});
+
+describe('limites de taille et sessions', () => {
+  it('refuse un corps déclaré trop volumineux sans le lire', async () => {
+    const big = JSON.stringify({
+      trackId: TRACK,
+      lessonId: LESSON,
+      action: 'seen',
+      pad: 'x'.repeat(20_000),
+    });
+    const headers = new Headers({
+      'content-type': 'application/json',
+      origin: ORIGIN,
+      cookie,
+      'content-length': String(big.length),
+    });
+    const res = await lessonPost(
+      new Request(`${ORIGIN}/api/progress/lessons`, { method: 'POST', headers, body: big }),
+      noParams(),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('refuse un corps trop volumineux transmis en flux sans longueur', async () => {
+    const chunk = new TextEncoder().encode('x'.repeat(8 * 1024));
+    let sent = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (sent >= 4) controller.close();
+        else {
+          sent += 1;
+          controller.enqueue(chunk);
+        }
+      },
+    });
+    const res = await lessonPost(
+      new Request(`${ORIGIN}/api/progress/lessons`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: ORIGIN, cookie },
+        body: stream,
+        duplex: 'half',
+      } as RequestInit & { duplex: 'half' }),
+      noParams(),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('limite la création de sessions par client réseau', async () => {
+    const ip = `2001:db8::${Math.floor(Math.random() * 0xffffff).toString(16)}`;
+    const statuses: number[] = [];
+    for (let i = 0; i < 22; i += 1) {
+      const req = request('/api/session', { idToken: 'not-a-valid-token-xyz' }, null);
+      req.headers.set('x-forwarded-for', `${ip}, 10.0.0.1`);
+      statuses.push((await sessionPost(req, noParams())).status);
+    }
+    expect(statuses.slice(0, 20).every((s) => s === 401)).toBe(true);
+    expect(statuses.slice(20)).toEqual([429, 429]);
+  });
+
+  it('révoque aussi une session anonyme à la déconnexion', async () => {
+    const token = await anonymousIdToken();
+    const created = await sessionPost(
+      request('/api/session', { idToken: token.idToken }, null),
+      noParams(),
+    );
+    const anonCookie = (created.headers.get('set-cookie') ?? '').split(';')[0] ?? '';
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    const del = await sessionDelete(
+      new Request(`${ORIGIN}/api/session`, {
+        method: 'DELETE',
+        headers: { origin: ORIGIN, cookie: anonCookie },
+      }),
+      noParams(),
+    );
+    expect(del.status).toBe(200);
+    const reuse = await lessonPost(
+      request(
+        '/api/progress/lessons',
+        { trackId: TRACK, lessonId: LESSON, action: 'seen' },
+        anonCookie,
+      ),
+      noParams(),
+    );
+    expect(reuse.status).toBe(401);
   });
 });
 

@@ -36,13 +36,14 @@ Durée : environ 40 minutes. Calcul : serverless uniquement. Volume : moins de 1
 
 Exécutez les cellules **dans l'ordre** et complétez les cellules marquées « À compléter ».
 
-| Étape                    | Résultat attendu                                              |
-| ------------------------ | ------------------------------------------------------------- |
-| 1. Génération            | 10 000 lignes                                                 |
-| 2. Agrégation par statut | 4 lignes ; `delivered` : 6 000 commandes, 30 110 137 centimes |
-| 3. CTAS par pays         | 4 pays, 1 500 commandes livrées chacun                        |
-| 5. UPDATE                | 668 lignes modifiées ; 1 332 commandes `pending` restantes    |
-| 6. Time travel           | 2 000 commandes `pending` dans la version précédant l'UPDATE  |
+| Étape                    | Résultat attendu                                               |
+| ------------------------ | -------------------------------------------------------------- |
+| 1. Génération            | 10 000 lignes                                                  |
+| 2. Agrégation par statut | 4 lignes ; `delivered` : 6 000 commandes, 30 110 137 centimes  |
+| 3. CTAS par pays         | 4 pays, 1 500 commandes livrées chacun                         |
+| 4. Historique initial    | Au moins une version, la plus récente créant la table `orders` |
+| 5. UPDATE                | 668 lignes modifiées ; 1 332 commandes `pending` restantes     |
+| 6. Time travel           | 2 000 commandes `pending` dans la version précédant l'UPDATE   |
 
 ### 3. Vérification
 

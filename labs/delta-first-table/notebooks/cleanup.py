@@ -26,7 +26,7 @@ _IDENTIFIER = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_-]{0,127}$")
 def checked_identifier(value, label):
     if not _IDENTIFIER.match(value):
         raise ValueError(f"{label} invalide : {value!r}. Caractères autorisés : lettres, chiffres, _ et -.")
-    return value
+    return value.lower()
 
 
 catalog_name = checked_identifier(
@@ -35,7 +35,7 @@ catalog_name = checked_identifier(
 )
 schema_name = checked_identifier(dbutils.widgets.get("schema").strip() or LAB_SCHEMA_DEFAULT, "Schéma")
 
-existing_schemas = {row[0] for row in spark.sql(f"SHOW SCHEMAS IN `{catalog_name}`").collect()}
+existing_schemas = {row[0].lower() for row in spark.sql(f"SHOW SCHEMAS IN `{catalog_name}`").collect()}
 lab_schema_exists = schema_name in existing_schemas
 print("Schéma du TP présent :", lab_schema_exists)
 
@@ -76,14 +76,14 @@ if lab_schema_exists and schema_name != "default":
 # COMMAND ----------
 
 remaining_objects = []
-schemas_now = {row[0] for row in spark.sql(f"SHOW SCHEMAS IN `{catalog_name}`").collect()}
+schemas_now = {row[0].lower() for row in spark.sql(f"SHOW SCHEMAS IN `{catalog_name}`").collect()}
 if schema_name in schemas_now and schema_name != "default":
-    tables_in_lab_schema = {row["tableName"] for row in spark.sql(f"SHOW TABLES IN `{catalog_name}`.`{schema_name}`").collect()}
+    tables_in_lab_schema = {row["tableName"].lower() for row in spark.sql(f"SHOW TABLES IN `{catalog_name}`.`{schema_name}`").collect()}
     remaining_objects += [t for t in LAB_TABLES if t in tables_in_lab_schema]
     if schema_name == LAB_SCHEMA_DEFAULT:
         remaining_objects.append(f"schema:{schema_name}")
 if "default" in schemas_now:
-    tables_in_default = {row["tableName"] for row in spark.sql(f"SHOW TABLES IN `{catalog_name}`.`default`").collect()}
+    tables_in_default = {row["tableName"].lower() for row in spark.sql(f"SHOW TABLES IN `{catalog_name}`.`default`").collect()}
     remaining_objects += [FALLBACK_PREFIX + t for t in LAB_TABLES if FALLBACK_PREFIX + t in tables_in_default]
 
 print("Objets du TP restants :", len(remaining_objects))

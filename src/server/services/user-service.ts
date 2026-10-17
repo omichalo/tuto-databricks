@@ -62,12 +62,18 @@ export async function acknowledgeFreeEditionTerms(
 ): Promise<{ written: boolean }> {
   if (version !== FREE_EDITION_TERMS_VERSION)
     throw new ApiError('conflict', 'Version des conditions obsolète');
-  if ((await acceptedTermsVersion(uid)) === version) return { written: false };
-  await paths.user(uid).set(
-    {
-      acknowledgements: { freeEditionTerms: { version, acceptedAt: Timestamp.fromMillis(now) } },
-    },
-    { merge: true },
-  );
-  return { written: true };
+  const ref = paths.user(uid);
+  return db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const current: unknown = snap.get('acknowledgements.freeEditionTerms.version');
+    if (current === version) return { written: false };
+    tx.set(
+      ref,
+      {
+        acknowledgements: { freeEditionTerms: { version, acceptedAt: Timestamp.fromMillis(now) } },
+      },
+      { merge: true },
+    );
+    return { written: true };
+  });
 }

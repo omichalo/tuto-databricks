@@ -43,7 +43,7 @@ _IDENTIFIER = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_-]{0,127}$")
 def checked_identifier(value, label):
     if not _IDENTIFIER.match(value):
         raise ValueError(f"{label} invalide : {value!r}. Caractères autorisés : lettres, chiffres, _ et -.")
-    return value
+    return value.lower()
 
 
 catalog_name = checked_identifier(

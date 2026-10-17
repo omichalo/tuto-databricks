@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { jsonResponse, route } from '@/server/route';
 import { acknowledgeFreeEditionTerms } from '@/server/services/user-service';

@@ -33,4 +33,10 @@ Référence : plan d'architecture révision 3 (validé). État détaillé : `doc
 
 ## Revues indépendantes (2026-10-17)
 
-_Section complétée à la fin de la session avec les constats et leur traitement._
+Trois revues en lecture seule ont été menées par des subagents : architecture, sécurité, pédagogie et exactitude des faits (une vérification des faits Databricks avait déjà été appliquée plus tôt).
+
+**Architecture** — corrigé : `APP_ORIGIN` disponible au build (`[BUILD, RUNTIME]`) ; refus des valeurs `REPLACE_WITH_*` en staging et en production (`env.ts` et `next.config.ts`) ; reconnaissance des conditions Free Edition transactionnelle ; DuckDB-Wasm avec `memory_limit`, plafond de résultat et redémarrage du worker s'il ne répond plus ; cache `immutable` pour `/vendor/duckdb/<version>/` ; `import 'server-only'` dans toutes les routes API. Documenté (défauts 8 à 11 de `docs/status.md`) : coût des quotas, lectures de `readTrackProgress`, sémantique de `attempts`, `expectedResults` public.
+
+**Sécurité** — aucun constat critique. Corrigé : quota de création de session par client réseau (élevé) ; révocation des sessions anonymes à la déconnexion et limite de corps vérifiée par `Content-Length` puis en flux (moyens) ; durcissement des hooks (faible). Restent ouverts : comptes anonymes multiples (défaut 7), CSP `'unsafe-inline'` (défaut 1).
+
+**Pédagogie et faits** — corrigé : alignement des `objectiveIds` sur les quiz (3 leçons) ; texte inexact sur les _deletion vectors_ ; noms de catalogue et de schéma normalisés en minuscules dans les notebooks ; leçons, objectifs et prérequis du TP ; sources ACID et historique ; étape 4 du tableau d'exécution ; période de récupération de 7 jours après `DROP TABLE` sur une table gérée ; définition d'ACID ; formulation sur les noms de colonnes. Faits vérifiés le 2026-10-17 sur docs.databricks.com. Le TP reste `experimental` ; son code de contrôle (`DFT-43854`) est inchangé.

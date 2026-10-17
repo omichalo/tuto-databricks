@@ -9,7 +9,7 @@ env:
     availability: [BUILD, RUNTIME]
   - variable: APP_ORIGIN
     value: https://REPLACE_WITH_PRODUCTION_DOMAIN
-    availability: [RUNTIME]
+    availability: [BUILD, RUNTIME]
   - variable: CONTENT_MIN_STATUS
     value: published
     availability: [BUILD, RUNTIME]

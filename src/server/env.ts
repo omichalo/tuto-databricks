@@ -22,6 +22,13 @@ const envSchema = z
     GCLOUD_PROJECT: z.string().optional(),
   })
   .superRefine((env, ctx) => {
+    if (env.APP_ENV === 'staging' || env.APP_ENV === 'production') {
+      for (const [name, value] of Object.entries(env)) {
+        if (typeof value === 'string' && value.includes('REPLACE_WITH_')) {
+          ctx.addIssue({ code: 'custom', message: `${name} contient encore un espace réservé` });
+        }
+      }
+    }
     if (
       (env.APP_ENV === 'staging' || env.APP_ENV === 'production') &&
       env.APP_ORIGIN === undefined
