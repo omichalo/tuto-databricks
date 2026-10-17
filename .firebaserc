@@ -1,7 +1,7 @@
 {
   "projects": {
     "default": "demo-tuto-databricks",
-    "staging": "REPLACE_WITH_STAGING_PROJECT_ID",
+    "staging": "tuto-databricks-staging",
     "production": "REPLACE_WITH_PRODUCTION_PROJECT_ID"
   }
 }

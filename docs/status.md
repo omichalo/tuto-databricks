@@ -31,7 +31,7 @@ Statuts de livraison : `Non commencé` → `Implémenté` → `Testé localement
 | Tableau de bord « Vérifié par la plateforme » / « Déclaré par vous »      | Testé localement     | E2E                                                                                                                                                       |
 | Configuration Cursor (rules, skills, subagents, hooks, Bugbot)            | Testé localement     | hooks testés en conditions réelles (lecture `.env` bloquée, faux positif corrigé) et 46 tests unitaires de politique                                      |
 | CI GitHub Actions                                                         | Testé localement     | dépôt public `omichalo/tuto-databricks` ; PR #1 : 4 jobs verts (qualité, secrets, émulateurs, E2E) le 2026-10-17                                          |
-| Déploiement staging (App Hosting, règles)                                 | Implémenté (préparé) | `apphosting.staging.yaml`, `deploy-staging.yml` inactif, runbook ; bloqué par les identifiants                                                            |
+| Déploiement staging (App Hosting, règles)                                 | Implémenté (préparé) | projet `tuto-databricks-staging` créé (app web enregistrée) ; Blaze bloqué (quota facturation GCP) ; `.firebaserc` mis à jour                             |
 
 Tests au 2026-10-17 (après corrections des revues) : **115 unitaires**, **28 émulateurs**, **7 E2E** Playwright, tous verts ; `actionlint` et `security:advisories` verts.
 
@@ -69,14 +69,15 @@ Aucun TP n'est `validated`. En production (`LAB_MIN_STATUS=validated`), aucun en
 
 ## Blocages externes
 
-| Blocage                                                                | Bloque                                 | Information à fournir                                                      |
-| ---------------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| Projets Firebase staging et production (Blaze), région                 | staging, preuve App Hosting de 15.5.28 | ID de projet, accord de dépense, `europe-west4` / `eur3`                   |
-| Clés reCAPTCHA Enterprise                                              | App Check                              | une clé par environnement                                                  |
-| Conditions d'usage Free Edition pour la validation par les mainteneurs | validation réelle des TP               | décision écrite (usage personnel non commercial de la personne qui valide) |
-| Workspace Free Edition de test                                         | `phase1-free-edition-validation`       | personne physique, compte personnel                                        |
-| Nom définitif du produit                                               | mise en ligne publique                 | nom vérifié (marque)                                                       |
-| Double relecture humaine des leçons                                    | passage en `published`                 | relecteurs technique et pédagogique                                        |
+| Blocage                                                                | Bloque                           | Information à fournir                                                                                                                                                         |
+| ---------------------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Passage Blaze du projet `tuto-databricks-staging`                      | App Hosting, Firestore régional  | quota de facturation GCP dépassé sur le compte « Olivier » : libérer un projet ou [demander une augmentation](https://support.google.com/code/contact/billing_quota_increase) |
+| Projet Firebase production + région                                    | production                       | ID, Blaze, `europe-west4` / `eur3`                                                                                                                                            |
+| Clés reCAPTCHA Enterprise                                              | App Check                        | une clé par environnement                                                                                                                                                     |
+| Conditions d'usage Free Edition pour la validation par les mainteneurs | validation réelle des TP         | décision écrite (usage personnel non commercial de la personne qui valide)                                                                                                    |
+| Workspace Free Edition de test                                         | `phase1-free-edition-validation` | personne physique, compte personnel                                                                                                                                           |
+| Nom définitif du produit                                               | mise en ligne publique           | nom vérifié (marque)                                                                                                                                                          |
+| Double relecture humaine des leçons                                    | passage en `published`           | relecteurs technique et pédagogique                                                                                                                                           |
 
 ## Revues indépendantes
 
