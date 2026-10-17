@@ -15,7 +15,7 @@
     "prebuild": "npm run content:build && npm run duckdb:vendor",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "npm run content:build && eslint . --max-warnings=0",
     "typecheck": "npm run content:build && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
